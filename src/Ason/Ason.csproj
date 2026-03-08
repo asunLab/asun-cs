@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <PackageId>Ason</PackageId>
+    <Version>0.1.0</Version>
+    <Description>High-performance ASON (Array-Schema Object Notation) encoder/decoder for .NET. Zero-copy binary, schema-driven text format.</Description>
+    <RepositoryUrl>https://github.com/ason-lab/ason</RepositoryUrl>
+    <License>MIT</License>
+  </PropertyGroup>
+</Project>
