@@ -8,7 +8,23 @@
     <PackageId>Ason</PackageId>
     <Version>0.1.0</Version>
     <Description>High-performance ASON (Array-Schema Object Notation) encoder/decoder for .NET. Zero-copy binary, schema-driven text format.</Description>
-    <RepositoryUrl>https://github.com/ason-lab/ason</RepositoryUrl>
-    <License>MIT</License>
+    <RepositoryUrl>https://github.com/ason-lab/ason-cs</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>/ason-cs</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>ason;serialization;schema;llm;data-format</PackageTags>
+    <Authors>ason contributors</Authors>
+    <Company>ason</Company>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" />
+  </ItemGroup>
 </Project>

@@ -179,53 +179,23 @@ record Employee(string Name, Dept Dept) : IAsonSchema { /* ... */ }
 | `Ason.encodePretty(T)`         | Pretty-format encode                                     |
 | `Ason.encodePrettyTyped(T)`    | Pretty-format with type annotations                      |
 
-## Performance
+## Latest Benchmarks
 
-Benchmarked on .NET 10.0, Release mode, comparing against `System.Text.Json`:
+Measured on this machine with:
 
-### Serialization (ASON is 1.2–9x faster)
+```bash
+dotnet run --project examples/Bench/Ason.Examples.Bench.csproj -c Release
+```
 
-| Scenario            | JSON      | ASON     | Speedup   | BIN encode | BIN vs JSON |
-| ------------------- | --------- | -------- | --------- | ---------- | ----------- |
-| Flat struct × 100   | 8.8 ms    | 7.2 ms   | **1.23x** | 2.6 ms     | **3.5x**    |
-| Flat struct × 500   | 42.8 ms   | 33.4 ms  | **1.28x** | 9.7 ms     | **4.4x**    |
-| Flat struct × 1000  | 86.5 ms   | 71.6 ms  | **1.21x** | 23.9 ms    | **3.6x**    |
-| Flat struct × 5000  | 507.8 ms  | 60.8 ms  | **8.36x** | 28.0 ms    | **18.1x**   |
-| 5-level deep × 10   | 17.9 ms   | 13.8 ms  | **1.30x** | 3.5 ms     | **5.2x**    |
-| 5-level deep × 50   | 150.6 ms  | 99.4 ms  | **1.52x** | 30.2 ms    | **5.0x**    |
-| 5-level deep × 100  | 433.6 ms  | 105.6 ms | **4.11x** | 34.0 ms    | **12.8x**   |
-| Large payload (10k) | 104.4 ms  | 31.9 ms  | **3.27x** | 13.2 ms    | **7.9x**    |
+Headline numbers:
 
-### Deserialization (ASON is 1.1–2.4x faster)
+- Flat 1,000-record dataset: ASON text serialize `329.84ms` vs JSON `842.31ms`, deserialize `298.01ms` vs JSON `841.81ms`
+- Flat 10,000-record dataset: ASON text serialize `117.54ms` vs JSON `280.08ms`, deserialize `513.51ms` vs JSON `741.79ms`
+- Deep 100-record company dataset: ASON text serialize `293.55ms` vs JSON `1253.94ms`, deserialize `1094.74ms` vs JSON `2535.20ms`
+- Size summary for 1,000 flat records: JSON `121,675 B`, ASON text `56,718 B` (`53%` smaller), ASON binary `74,454 B` (`39%` smaller)
+- ASON binary was the fastest serialization path in this run: `94.51ms` for flat 1,000 records vs JSON `842.31ms`
 
-| Scenario            | JSON      | ASON     | Speedup   |
-| ------------------- | --------- | -------- | --------- |
-| Flat struct × 100   | 19.8 ms   | 15.8 ms  | **1.25x** |
-| Flat struct × 500   | 94.6 ms   | 74.6 ms  | **1.27x** |
-| Flat struct × 1000  | 221.5 ms  | 207.1 ms | **1.07x** |
-| Flat struct × 5000  | 462.5 ms  | 267.7 ms | **1.73x** |
-| 5-level deep × 50   | 354.4 ms  | 147.9 ms | **2.40x** |
-| 5-level deep × 100  | 957.6 ms  | 637.0 ms | **1.50x** |
-| Large payload (10k) | 342.9 ms  | 203.6 ms | **1.68x** |
-
-### Single Struct Roundtrip (10000x)
-
-| Metric    | JSON      | ASON     | Speedup   |
-| --------- | --------- | -------- | --------- |
-| Encode    | 25.9 ms   | 24.7 ms  | **1.05x** |
-| Decode    | 21.5 ms   | 14.4 ms  | **1.50x** |
-| Roundtrip | 30.8 ms   | 19.2 ms  | **1.60x** |
-| BIN enc   | —         | 1.8 ms   | **17.2x** |
-
-### Size Savings
-
-| Scenario           | JSON     | ASON text | ASON bin  | Text Saving | Bin Saving |
-| ------------------ | -------- | --------- | --------- | ----------- | ---------- |
-| Flat struct × 1000 | 118.8 KB | 55.4 KB   | 72.7 KB   | **53%**     | **39%**    |
-| 5-level deep × 100 | 431.5 KB | 170.1 KB  | 225.4 KB  | **61%**     | **48%**    |
-| 10k records        | 1.2 MB   | 0.6 MB    | 0.7 MB    | **53%**     | **39%**    |
-
-### Why is ASON Faster?
+## Why ASON Performs Well
 
 1. **Zero key-hashing** — Schema parsed once; fields mapped by position index `O(1)`, no per-row key string hashing.
 2. **Schema-driven parsing** — Deserializer knows expected types, enabling direct parsing. CPU branch prediction hits ~100%.
@@ -249,12 +219,6 @@ Benchmarked on .NET 10.0, Release mode, comparing against `System.Text.Json`:
 - `ref struct` for decoder state — fully stack-allocated
 - `[MethodImpl(MethodImplOptions.AggressiveInlining)]` on hot paths
 
-Run the benchmark yourself:
-
-```bash
-dotnet run --project examples/Bench -c Release
-```
-
 ## Examples
 
 ```bash
@@ -270,7 +234,7 @@ dotnet run --project examples/Bench -c Release
 
 ## ASON Format Specification
 
-See the full [ASON Spec](https://github.com/ason-lab/ason/blob/main/docs/ASON_SPEC_CN.md) for syntax rules, BNF grammar, escape rules, type system, and LLM integration best practices.
+See the full [ASON Spec](https://github.com/ason-lab/ason/blob/main/docs/ASON_SPEC.md) for syntax rules, BNF grammar, escape rules, type system, and LLM integration best practices.
 
 ### Syntax Quick Reference
 
@@ -287,3 +251,7 @@ See the full [ASON Spec](https://github.com/ason-lab/ason/blob/main/docs/ASON_SP
 ## License
 
 MIT
+
+## Contributors
+
+- [Athan](https://github.com/athxx)
