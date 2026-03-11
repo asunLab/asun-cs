@@ -35,6 +35,20 @@ Add the Ason NuGet package:
 
 ```bash
 dotnet add package Ason
+
+The published NuGet package ships a single package with assets for both `net8.0` and `net10.0`.
+
+If your app targets a specific runtime, you can pin it explicitly in your project file:
+
+```xml
+<TargetFramework>net8.0</TargetFramework>
+```
+
+or:
+
+```xml
+<TargetFramework>net10.0</TargetFramework>
+```
 ```
 
 ### Define a Schema Type
@@ -215,7 +229,7 @@ Headline numbers:
 - `stackalloc` for integer/float formatting
 - `ReadOnlySpan<char>` for all parsing — no string copies
 - `BinaryPrimitives` for little-endian binary I/O — direct memory operations
-- `SearchValues<char>` (`.NET 8+`) — hardware-accelerated character scanning
+- `SearchValues<char>` (`.NET 8+`, package targets `net8.0` and `net10.0`) — hardware-accelerated character scanning
 - `ref struct` for decoder state — fully stack-allocated
 - `[MethodImpl(MethodImplOptions.AggressiveInlining)]` on hot paths
 
@@ -230,6 +244,13 @@ dotnet run --project examples/Complex
 
 # Performance benchmark (ASON vs JSON)
 dotnet run --project examples/Bench -c Release
+```
+
+If you have both target frameworks enabled locally, you can run a specific one:
+
+```bash
+dotnet run --project examples/Basic -f net8.0
+dotnet run --project examples/Basic -f net10.0
 ```
 
 ## ASON Format Specification

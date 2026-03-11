@@ -35,6 +35,20 @@ ASON (~35 tokens, 节省 65%):
 
 ```bash
 dotnet add package Ason
+
+发布出来的 NuGet 包是单包多目标，同时包含 `net8.0` 和 `net10.0` 资产。
+
+如果你的应用要固定目标框架，可以在项目文件里显式指定：
+
+```xml
+<TargetFramework>net8.0</TargetFramework>
+```
+
+或者：
+
+```xml
+<TargetFramework>net10.0</TargetFramework>
+```
 ```
 
 ### 定义模式类型
@@ -215,7 +229,7 @@ dotnet run --project examples/Bench/Ason.Examples.Bench.csproj -c Release
 - `stackalloc` 用于整数/浮点数格式化
 - `ReadOnlySpan<char>` 用于所有解析 — 无字符串拷贝
 - `BinaryPrimitives` 用于小端序二进制 I/O — 直接内存操作
-- `SearchValues<char>`（.NET 8+）— 硬件加速字符扫描
+- `SearchValues<char>`（.NET 8+，包同时目标 `net8.0` 和 `net10.0`）— 硬件加速字符扫描
 - `ref struct` 用于解码器状态 — 完全栈分配
 - `[MethodImpl(MethodImplOptions.AggressiveInlining)]` 用于热路径
 
@@ -230,6 +244,13 @@ dotnet run --project examples/Complex
 
 # 性能基准测试（ASON vs JSON）
 dotnet run --project examples/Bench -c Release
+```
+
+如果你本地同时启用了多个目标框架，也可以显式指定：
+
+```bash
+dotnet run --project examples/Basic -f net8.0
+dotnet run --project examples/Basic -f net10.0
 ```
 
 ## ASON 格式规范
