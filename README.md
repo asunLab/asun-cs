@@ -130,10 +130,10 @@ var prettyTyped = Ason.Ason.encodePrettyTyped(user);
 
 | Type           | ASON Representation       | Example                  |
 | -------------- | ------------------------- | ------------------------ |
-| long (int64)   | Plain number              | `42`, `-100`             |
-| double (f64)   | Decimal number            | `3.14`, `-0.5`           |
+| int            | Plain number              | `42`, `-100`             |
+| float          | Decimal number            | `3.14`, `-0.5`           |
 | bool           | Literal                   | `true`, `false`          |
-| string         | Unquoted or quoted        | `Alice`, `"Carol Smith"` |
+| str            | Unquoted or quoted        | `Alice`, `"Carol Smith"` |
 | Optional       | Value or empty            | `hello` or _(blank)_     |
 | List\<T\>      | `[v1,v2,v3]`             | `[rust,go,python]`       |
 | Nested struct  | `(field1,field2)`         | `(Engineering,500000)`   |

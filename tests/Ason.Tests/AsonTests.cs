@@ -229,14 +229,14 @@ public class DecodeTests
     }
 
     [Fact]
-    public void RejectsSchemaTypeAliases()
+    public void RejectsInvalidSchemaTypes()
     {
-        Assert.Throws<AsonException>(() => Decoder.Decode("{id@integer,name@str}:(1,Alice)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{id@int,name@string}:(1,Alice)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{score@double}:(3.5)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{active@boolean}:(true)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{tags@[string]}:([Alice])"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{profile@{name@string}}:((Alice))"));
+        Assert.Throws<AsonException>(() => Decoder.Decode("{id@numx,name@str}:(1,Alice)"));
+        Assert.Throws<AsonException>(() => Decoder.Decode("{id@int,name@textx}:(1,Alice)"));
+        Assert.Throws<AsonException>(() => Decoder.Decode("{score@decimalx}:(3.5)"));
+        Assert.Throws<AsonException>(() => Decoder.Decode("{active@flagx}:(true)"));
+        Assert.Throws<AsonException>(() => Decoder.Decode("{tags@[textx]}:([Alice])"));
+        Assert.Throws<AsonException>(() => Decoder.Decode("{profile@{name@textx}}:((Alice))"));
     }
 
     [Fact]

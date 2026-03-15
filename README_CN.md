@@ -130,10 +130,10 @@ var prettyTyped = Ason.Ason.encodePrettyTyped(user);
 
 | 类型          | ASON 表示              | 示例                   |
 | ------------- | ---------------------- | ---------------------- |
-| long (int64)  | 纯数字                 | `42`、`-100`           |
-| double (f64)  | 小数                   | `3.14`、`-0.5`         |
+| int           | 纯数字                 | `42`、`-100`           |
+| float         | 小数                   | `3.14`、`-0.5`         |
 | bool          | 字面量                 | `true`、`false`        |
-| string        | 不带引号或带引号       | `Alice`、`"Carol Smith"` |
+| str           | 不带引号或带引号       | `Alice`、`"Carol Smith"` |
 | 可选类型      | 值或空                 | `hello` 或 _(空白)_    |
 | List\<T\>     | `[v1,v2,v3]`          | `[rust,go,python]`     |
 | 嵌套结构      | `(field1,field2)`      | `(Engineering,500000)` |
