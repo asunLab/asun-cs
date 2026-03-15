@@ -9,9 +9,9 @@ namespace Ason;
 /// </summary>
 internal static class SimdHelper
 {
-    // ASON special chars: , ( ) [ ] { } : " \ \n \r \t
+    // ASON special chars: , @ ( ) [ ] { } : " \ \n \r \t
     private static readonly SearchValues<char> s_specialChars =
-        SearchValues.Create(",()[]{}:\"\\'\n\r\t");
+        SearchValues.Create(",@()[]{}:\"\\'\n\r\t");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ContainsAnySpecial(ReadOnlySpan<char> s)

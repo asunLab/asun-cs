@@ -93,9 +93,18 @@ public class EncodeTests
     [Fact]
     public void EscapedString()
     {
-        var u = new User(1, "hello, world", true);
+        var u = new User(1, "@Alice", true);
         var s = Encoder.Encode(u);
-        Assert.Contains("\"", s);
+        Assert.Equal("{id,name,active}:(1,\"@Alice\",true)", s);
+        Assert.Equal(u, Decoder.DecodeWith(s, User.FromFields));
+        Assert.Equal(u, Decoder.DecodeWith(Encoder.EncodeTyped(u), User.FromFields));
+        Assert.Equal(u, Decoder.DecodeWith(PrettyPrinter.EncodePretty(u), User.FromFields));
+        Assert.Equal(u, Decoder.DecodeWith(PrettyPrinter.EncodePrettyTyped(u), User.FromFields));
+        Assert.Equal(u, BinaryCodec.DecodeBinaryWith(
+            BinaryCodec.EncodeBinary(u),
+            new[] { "id", "name", "active" },
+            new[] { FieldType.Int, FieldType.String, FieldType.Bool },
+            User.FromFields));
     }
 
     [Fact]
