@@ -158,32 +158,68 @@ internal ref struct AsonDecoder
             }
             SkipWs();
 
-            // Skip optional type annotation / structural marker
+            // Validate and skip optional type annotation / structural marker
             if (Pos < Len && _input[Pos] == '@')
             {
                 Pos++;
                 SkipWs();
-                if (Pos < Len)
-                {
-                    char tc = _input[Pos];
-                    if (tc == '{') SkipBalanced('{', '}');
-                    else if (tc == '[') SkipBalanced('[', ']');
-                    else
-                    {
-                        while (Pos < Len)
-                        {
-                            char c = _input[Pos];
-                            if (c == ',' || c == '}' || c == ' ' || c == '\t') break;
-                            Pos++;
-                        }
-                    }
-                }
+                ValidateSchemaAnnotation();
             }
             fields.Add(name);
         }
         var result = fields.ToArray();
         _schemaCache?.TryAdd(hash, result);
         return result;
+    }
+
+    private void ValidateSchemaAnnotation()
+    {
+        if (Pos >= Len) throw new AsonException("expected schema type after '@'");
+        char tc = _input[Pos];
+        if (tc == '{')
+        {
+            _ = ParseSchema();
+            return;
+        }
+        if (tc == '[')
+        {
+            Pos++;
+            SkipWs();
+            if (Pos < Len && _input[Pos] == ']')
+            {
+                Pos++;
+                return;
+            }
+            if (Pos < Len && _input[Pos] == '{')
+            {
+                _ = ParseSchema();
+            }
+            else
+            {
+                ValidateSchemaScalarType();
+            }
+            SkipWs();
+            if (Pos >= Len || _input[Pos] != ']') throw new AsonException("expected ']' in array type annotation");
+            Pos++;
+            return;
+        }
+        ValidateSchemaScalarType();
+    }
+
+    private void ValidateSchemaScalarType()
+    {
+        int start = Pos;
+        while (Pos < Len)
+        {
+            char c = _input[Pos];
+            if (c == ',' || c == '}' || c == ']' || c == ' ' || c == '\t') break;
+            Pos++;
+        }
+        if (start == Pos) throw new AsonException("expected schema type after '@'");
+        var token = _input[start..Pos].ToString();
+        if (token.EndsWith("?")) token = token[..^1];
+        if (token is "int" or "str" or "float" or "bool") return;
+        throw new AsonException($"unsupported schema type '{token}'; use int, str, float, or bool");
     }
 
     private void SkipBalanced(char open, char close)
