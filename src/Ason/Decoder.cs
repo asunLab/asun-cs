@@ -144,11 +144,18 @@ internal ref struct AsonDecoder
             SkipWs();
             if (Peek() == '}') { Pos++; break; }
             if (fields.Count > 0) { if (Next() != ',') throw AsonException.ExpectedComma; SkipWs(); }
-
-            int start = Pos;
-            int idx = SimdHelper.IndexOfSchemaDelimiter(_input[Pos..]);
-            if (idx >= 0) Pos += idx; else Pos = Len;
-            string name = _input[start..Pos].ToString();
+            string name;
+            if (Peek() == '"')
+            {
+                name = ParseQuotedString();
+            }
+            else
+            {
+                int start = Pos;
+                int idx = SimdHelper.IndexOfSchemaDelimiter(_input[Pos..]);
+                if (idx >= 0) Pos += idx; else Pos = Len;
+                name = _input[start..Pos].ToString();
+            }
             SkipWs();
 
             // Skip optional type annotation / structural marker

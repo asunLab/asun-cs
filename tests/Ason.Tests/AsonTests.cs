@@ -113,6 +113,13 @@ public class EncodeTests
         var legacy = new LegacyMapHolder(new Dictionary<string, object?> { ["age"] = 30L });
         Assert.Throws<AsonException>(() => Encoder.Encode(legacy));
     }
+
+    [Fact]
+    public void QuotedSchemaFieldNames()
+    {
+        var v = new SpecialSchemaFields(1, "Alice", true);
+        Assert.Equal("{\"id uuid\"@int,\"65\"@str,\"{}[]@\\\"\"@bool}:(1,Alice,true)", Encoder.EncodeTyped(v));
+    }
 }
 
 public record NumStruct(long A, double B) : IAsonSchema
@@ -131,6 +138,20 @@ public record LegacyMapHolder(Dictionary<string, object?> Attrs) : IAsonSchema
     public ReadOnlySpan<string> FieldNames => _names;
     public ReadOnlySpan<string?> FieldTypes => _types;
     public object?[] FieldValues => [Attrs];
+}
+
+public record SpecialSchemaFields(long IdUuid, string Numeric, bool Special) : IAsonSchema
+{
+    private static readonly string[] _names = ["id uuid", "65", "{}[]@\""];
+    private static readonly string?[] _types = ["int", "str", "bool"];
+    public ReadOnlySpan<string> FieldNames => _names;
+    public ReadOnlySpan<string?> FieldTypes => _types;
+    public object?[] FieldValues => [(object)IdUuid, Numeric, Special];
+
+    public static SpecialSchemaFields FromFields(Dictionary<string, object?> m) => new(
+        Convert.ToInt64(m["id uuid"]),
+        (string)m["65"]!,
+        Convert.ToBoolean(m["{}[]@\""]));
 }
 
 public record MatrixPart(long Id, double Score)
@@ -196,6 +217,13 @@ public class DecodeTests
         Assert.Equal(1L, u.Id);
         Assert.Equal("Alice", u.Name);
         Assert.True(u.Active);
+    }
+
+    [Fact]
+    public void QuotedSchemaFieldNames()
+    {
+        var v = Decoder.DecodeWith("{\"id uuid\"@int,\"65\"@str,\"{}[]@\\\"\"@bool}:(1,Alice,true)", SpecialSchemaFields.FromFields);
+        Assert.Equal(new SpecialSchemaFields(1, "Alice", true), v);
     }
 
     [Fact]
@@ -422,6 +450,18 @@ public class BinaryTests
         var json = "{\"id\":1,\"name\":\"Alice\",\"active\":true}";
         Assert.True(bin.Length < json.Length);
     }
+
+    [Fact]
+    public void EncodeDecodeQuotedSchemaNames()
+    {
+        var v = new SpecialSchemaFields(1, "Alice", true);
+        var bin = BinaryCodec.EncodeBinary(v);
+        var v2 = BinaryCodec.DecodeBinaryWith(bin,
+            new[] { "id uuid", "65", "{}[]@\"" },
+            new[] { FieldType.Int, FieldType.String, FieldType.Bool },
+            SpecialSchemaFields.FromFields);
+        Assert.Equal(v, v2);
+    }
 }
 
 public class PrettyTests
@@ -438,6 +478,15 @@ public class PrettyTests
     {
         var u = new User(1, "Alice", true);
         Assert.Equal("{id@int, name@str, active@bool}:(1, Alice, true)", PrettyPrinter.EncodePrettyTyped(u));
+    }
+
+    [Fact]
+    public void QuotedSchemaNamesRoundtrip()
+    {
+        var v = new SpecialSchemaFields(1, "Alice", true);
+        var text = PrettyPrinter.EncodePrettyTyped(v);
+        var v2 = Decoder.DecodeWith(text, SpecialSchemaFields.FromFields);
+        Assert.Equal(v, v2);
     }
 
     [Fact]

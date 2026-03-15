@@ -130,7 +130,7 @@ public static class Encoder
         for (int i = 0; i < names.Length; i++)
         {
             if (i > 0) w.WriteChar(',');
-            w.WriteSpan(names[i]);
+            WriteSchemaFieldName(ref w, names[i]);
 
             var v = i < values.Length ? values[i] : null;
             if (v is System.Collections.IDictionary) throw AsonException.UnsupportedMap;
@@ -166,7 +166,7 @@ public static class Encoder
         for (int i = 0; i < names.Length; i++)
         {
             if (i > 0) w.WriteChar(',');
-            w.WriteSpan(names[i]);
+            WriteSchemaFieldName(ref w, names[i]);
 
             var v = i < values.Length ? values[i] : null;
             if (v is System.Collections.IDictionary) throw AsonException.UnsupportedMap;
@@ -185,6 +185,50 @@ public static class Encoder
             }
         }
         w.WriteChar('}');
+    }
+
+    private static void WriteSchemaFieldName(ref AsonWriter w, string name)
+    {
+        if (!SchemaFieldNameNeedsQuoting(name))
+        {
+            w.WriteSpan(name);
+            return;
+        }
+        w.WriteChar('"');
+        for (int i = 0; i < name.Length; i++)
+        {
+            switch (name[i])
+            {
+                case '"': w.WriteSpan("\\\""); break;
+                case '\\': w.WriteSpan("\\\\"); break;
+                case '\n': w.WriteSpan("\\n"); break;
+                case '\r': w.WriteSpan("\\r"); break;
+                case '\t': w.WriteSpan("\\t"); break;
+                case '\b': w.WriteSpan("\\b"); break;
+                case '\f': w.WriteSpan("\\f"); break;
+                default: w.WriteChar(name[i]); break;
+            }
+        }
+        w.WriteChar('"');
+    }
+
+    private static bool SchemaFieldNameNeedsQuoting(string name)
+    {
+        if (name.Length == 0) return true;
+        if (name == "true" || name == "false") return true;
+        if (name[0] == ' ' || name[^1] == ' ') return true;
+        bool couldBeNumber = true;
+        int numStart = name[0] == '-' ? 1 : 0;
+        if (numStart >= name.Length) couldBeNumber = false;
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            if (char.IsWhiteSpace(c) || c is ',' or '@' or ':' or '{' or '}' or '[' or ']' or '(' or ')' or '"' or '\\')
+                return true;
+            if (couldBeNumber && i >= numStart && !((c >= '0' && c <= '9') || c == '.'))
+                couldBeNumber = false;
+        }
+        return couldBeNumber && name.Length > numStart;
     }
 
     private static void WriteDeclaredTypeHeader(ref AsonWriter w, string fieldType, bool typed)
