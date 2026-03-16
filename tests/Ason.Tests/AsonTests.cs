@@ -402,6 +402,12 @@ public class DecodeTests
     {
         Assert.Throws<AsonException>(() => Decoder.Decode("{attrs}:(<age:30>)"));
     }
+
+    [Fact]
+    public void RejectsMultipleTuplesAfterSingleStructSchema()
+    {
+        Assert.Throws<AsonException>(() => Decoder.Decode("{id@int,name@str}:(101,Alice),(102,Bob)"));
+    }
 }
 
 public class RoundtripTests
