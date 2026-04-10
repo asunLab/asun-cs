@@ -25,7 +25,7 @@ ASON (~35 tokens, 节省 65%):
 | 键名重复     | 每个对象都有 | 只声明一次 ✓     |
 | 人类可读     | 是           | 是 ✓             |
 | 嵌套结构     | ✓            | ✓                |
-| 类型注解     | 无           | 可选 ✓           |
+| 字段绑定     | 无           | 内建 `@...` ✓    |
 | 序列化速度   | 1x           | **~1.2–9x 更快** ✓ |
 | 数据体积     | 100%         | **40–60%** ✓     |
 
@@ -78,7 +78,7 @@ var user = new User(1, "Alice", true);
 var s = Ason.Ason.encode(user);
 // => "{id,name,active}:(1,Alice,true)"
 
-// 带类型注解编码
+// 带基本类型提示编码
 var typed = Ason.Ason.encodeTyped(user);
 // => "{id@int,name@str,active@bool}:(1,Alice,true)"
 
@@ -188,17 +188,17 @@ record Employee(string Name, Dept Dept) : IAsonSchema { /* ... */ }
 
 | 函数                             | 描述                              |
 | -------------------------------- | --------------------------------- |
-| `Ason.encode(T)`                 | 序列化结构体 → 无类型注解模式     |
-| `Ason.encodeTyped(T)`            | 序列化结构体 → 带类型注解模式     |
+| `Ason.encode(T)`                 | 序列化结构体 → 不带基本类型提示的 schema |
+| `Ason.encodeTyped(T)`            | 序列化结构体 → 带基本类型提示的 schema   |
 | `Ason.encode<T>(List<T>)`        | 序列化列表 → 模式只写一次        |
-| `Ason.encodeTyped<T>(List<T>)`   | 序列化列表 → 带注解模式          |
+| `Ason.encodeTyped<T>(List<T>)`   | 序列化列表 → 带基本类型提示的 schema |
 | `Ason.decode(string)`            | 反序列化 → 字段袋（`Dictionary<string, object?>`） |
 | `Ason.decodeWith<T>(s, fn)`      | 反序列化 → 通过工厂函数生成 T    |
 | `Ason.decodeListWith<T>(s, fn)`  | 反序列化 → List\<T\>             |
 | `Ason.encodeBinary(T)`           | 二进制编码（零拷贝 BinaryPrimitives）|
 | `Ason.decodeBinaryWith<T>(…)`    | 二进制解码 → 类型化 T            |
 | `Ason.encodePretty(T)`           | 美化格式编码                      |
-| `Ason.encodePrettyTyped(T)`      | 美化格式 + 类型注解               |
+| `Ason.encodePrettyTyped(T)`      | 美化格式 + 基本类型提示           |
 
 ## Bench 输出
 

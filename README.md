@@ -78,7 +78,7 @@ var user = new User(1, "Alice", true);
 var s = Ason.Ason.encode(user);
 // => "{id,name,active}:(1,Alice,true)"
 
-// Encode with type annotations
+// Encode with scalar type hints
 var typed = Ason.Ason.encodeTyped(user);
 // => "{id@int,name@str,active@bool}:(1,Alice,true)"
 
@@ -188,17 +188,17 @@ record Employee(string Name, Dept Dept) : IAsonSchema { /* ... */ }
 
 | Function                       | Description                                              |
 | ------------------------------ | -------------------------------------------------------- |
-| `Ason.encode(T)`               | Serialize struct → unannotated schema                    |
-| `Ason.encodeTyped(T)`          | Serialize struct → annotated schema                      |
-| `Ason.encode<T>(List<T>)`      | Serialize list → unannotated schema (written once)       |
-| `Ason.encodeTyped<T>(List<T>)` | Serialize list → annotated schema                        |
+| `Ason.encode(T)`               | Serialize struct → schema without scalar hints           |
+| `Ason.encodeTyped(T)`          | Serialize struct → schema with scalar type hints         |
+| `Ason.encode<T>(List<T>)`      | Serialize list → schema without scalar hints (written once) |
+| `Ason.encodeTyped<T>(List<T>)` | Serialize list → schema with scalar type hints           |
 | `Ason.decode(string)`          | Deserialize → field bag (`Dictionary<string, object?>`)  |
 | `Ason.decodeWith<T>(s, fn)`    | Deserialize → typed T via factory                        |
 | `Ason.decodeListWith<T>(s, fn)`| Deserialize → List\<T\> via factory                      |
 | `Ason.encodeBinary(T)`         | Binary encode (zero-copy BinaryPrimitives)               |
 | `Ason.decodeBinaryWith<T>(…)`  | Binary decode → typed T                                  |
 | `Ason.encodePretty(T)`         | Pretty-format encode                                     |
-| `Ason.encodePrettyTyped(T)`    | Pretty-format with type annotations                      |
+| `Ason.encodePrettyTyped(T)`    | Pretty-format with scalar type hints                     |
 
 ## Benchmark Output
 
