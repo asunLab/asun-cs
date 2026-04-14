@@ -1,10 +1,10 @@
-using Ason;
+using Asun;
 using Xunit;
 
-namespace Ason.Tests;
+namespace Asun.Tests;
 
 // Test data classes
-public record User(long Id, string Name, bool Active) : IAsonSchema
+public record User(long Id, string Name, bool Active) : IAsunSchema
 {
     private static readonly string[] _names = ["id", "name", "active"];
     private static readonly string?[] _types = ["int", "str", "bool"];
@@ -16,7 +16,7 @@ public record User(long Id, string Name, bool Active) : IAsonSchema
         Convert.ToInt64(m["id"]), (string)m["name"]!, Convert.ToBoolean(m["active"]));
 }
 
-public record Dept(string Title) : IAsonSchema
+public record Dept(string Title) : IAsunSchema
 {
     private static readonly string[] _names = ["title"];
     private static readonly string?[] _types = ["str"];
@@ -27,7 +27,7 @@ public record Dept(string Title) : IAsonSchema
     public static Dept FromFields(Dictionary<string, object?> m) => new((string)m["title"]!);
 }
 
-public record Employee(string Name, Dept Dept, bool Active) : IAsonSchema
+public record Employee(string Name, Dept Dept, bool Active) : IAsunSchema
 {
     private static readonly string[] _names = ["name", "dept", "active"];
     private static readonly string?[] _types = ["str", null, "bool"];
@@ -120,7 +120,7 @@ public class EncodeTests
     public void LegacyMapFieldIsRejected()
     {
         var legacy = new LegacyMapHolder(new Dictionary<string, object?> { ["age"] = 30L });
-        Assert.Throws<AsonException>(() => Encoder.Encode(legacy));
+        Assert.Throws<AsunException>(() => Encoder.Encode(legacy));
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class EncodeTests
     }
 }
 
-public record NumStruct(long A, double B) : IAsonSchema
+public record NumStruct(long A, double B) : IAsunSchema
 {
     private static readonly string[] _names = ["a", "b"];
     private static readonly string?[] _types = ["int", "float"];
@@ -140,7 +140,7 @@ public record NumStruct(long A, double B) : IAsonSchema
     public object?[] FieldValues => [(object)A, (object)B];
 }
 
-public record LegacyMapHolder(Dictionary<string, object?> Attrs) : IAsonSchema
+public record LegacyMapHolder(Dictionary<string, object?> Attrs) : IAsunSchema
 {
     private static readonly string[] _names = ["attrs"];
     private static readonly string?[] _types = [null];
@@ -149,7 +149,7 @@ public record LegacyMapHolder(Dictionary<string, object?> Attrs) : IAsonSchema
     public object?[] FieldValues => [Attrs];
 }
 
-public record SpecialSchemaFields(long IdUuid, string Numeric, bool Special) : IAsonSchema
+public record SpecialSchemaFields(long IdUuid, string Numeric, bool Special) : IAsunSchema
 {
     private static readonly string[] _names = ["id uuid", "65", "{}[]@\""];
     private static readonly string?[] _types = ["int", "str", "bool"];
@@ -231,12 +231,12 @@ public class DecodeTests
     [Fact]
     public void RejectsInvalidSchemaTypes()
     {
-        Assert.Throws<AsonException>(() => Decoder.Decode("{id@numx,name@str}:(1,Alice)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{id@int,name@textx}:(1,Alice)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{score@decimalx}:(3.5)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{active@flagx}:(true)"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{tags@[textx]}:([Alice])"));
-        Assert.Throws<AsonException>(() => Decoder.Decode("{profile@{name@textx}}:((Alice))"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{id@numx,name@str}:(1,Alice)"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{id@int,name@textx}:(1,Alice)"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{score@decimalx}:(3.5)"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{active@flagx}:(true)"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{tags@[textx]}:([Alice])"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{profile@{name@textx}}:((Alice))"));
     }
 
     [Fact]
@@ -400,13 +400,13 @@ public class DecodeTests
     [Fact]
     public void LegacyMapSyntaxIsRejected()
     {
-        Assert.Throws<AsonException>(() => Decoder.Decode("{attrs}:(<age:30>)"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{attrs}:(<age:30>)"));
     }
 
     [Fact]
     public void RejectsMultipleTuplesAfterSingleStructSchema()
     {
-        Assert.Throws<AsonException>(() => Decoder.Decode("{id@int,name@str}:(101,Alice),(102,Bob)"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{id@int,name@str}:(101,Alice),(102,Bob)"));
     }
 }
 

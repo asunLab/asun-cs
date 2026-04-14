@@ -1,25 +1,25 @@
-using Ason;
-using A = Ason.Ason;
+using Asun;
+using A = Asun.Asun;
 
-Console.WriteLine("=== ASON C# Basic Examples ===\n");
+Console.WriteLine("=== ASUN C# Basic Examples ===\n");
 
 // 1. Serialize a single struct
 var user = new BasicUser(1, "Alice", true);
-var asonStr = A.encode(user);
-Console.WriteLine($"1. Serialize single struct:\n   {asonStr}\n");
+var asunStr = A.encode(user);
+Console.WriteLine($"1. Serialize single struct:\n   {asunStr}\n");
 
 // 2. Serialize with type annotations
 var typedStr = A.encodeTyped(user);
 Console.WriteLine($"2. Serialize with type annotations:\n   {typedStr}\n");
 
-// 3. Deserialize from ASON
+// 3. Deserialize from ASUN
 var decoded = A.decodeWith("{id@int,name@str,active@bool}:(1,Alice,true)", BasicUser.FromFields);
 Console.WriteLine($"3. Deserialize single struct:\n   {decoded}\n");
 
 // 4. Serialize vec of structs
 var users = new List<BasicUser> { new(1, "Alice", true), new(2, "Bob", false), new(3, "Carol Smith", true) };
-var asonVec = A.encode<BasicUser>(users);
-Console.WriteLine($"4. Serialize vec (schema-driven):\n   {asonVec}\n");
+var asunVec = A.encode<BasicUser>(users);
+Console.WriteLine($"4. Serialize vec (schema-driven):\n   {asunVec}\n");
 
 // 5. Typed vec
 var typedVec = A.encodeTyped<BasicUser>(users);
@@ -38,27 +38,27 @@ var mlUsers = A.decodeListWith(multiline, BasicUser.FromFields);
 foreach (var u in mlUsers) Console.WriteLine($"   {u}");
 
 // 8. Roundtrip
-Console.WriteLine("\n8. Roundtrip (ASON text vs ASON binary):");
+Console.WriteLine("\n8. Roundtrip (ASUN text vs ASUN binary):");
 var original = new BasicUser(42, "Test User", true);
-var asonText = A.encode(original);
-var fromAson = A.decodeWith(asonText, BasicUser.FromFields);
+var asunText = A.encode(original);
+var fromAsun = A.decodeWith(asunText, BasicUser.FromFields);
 
-var asonBin = A.encodeBinary(original);
-var fromBin = A.decodeBinaryWith(asonBin,
+var asunBin = A.encodeBinary(original);
+var fromBin = A.decodeBinaryWith(asunBin,
     new[] { "id", "name", "active" },
     new[] { FieldType.Int, FieldType.String, FieldType.Bool },
     BasicUser.FromFields);
 
 Console.WriteLine($"   original:     {original}");
-Console.WriteLine($"   ASON text:    {asonText} ({asonText.Length} B)");
-Console.WriteLine($"   ASON binary:  {asonBin.Length} B");
+Console.WriteLine($"   ASUN text:    {asunText} ({asunText.Length} B)");
+Console.WriteLine($"   ASUN binary:  {asunBin.Length} B");
 Console.WriteLine("   ✓ all formats roundtrip OK");
 
 // 9. Vec roundtrip
 Console.WriteLine("\n9. Vec roundtrip:");
 var vecBin = A.encodeBinary<BasicUser>(users);
-Console.WriteLine($"   ASON text:   {asonVec.Length} B");
-Console.WriteLine($"   ASON binary: {vecBin.Length} B");
+Console.WriteLine($"   ASUN text:   {asunVec.Length} B");
+Console.WriteLine($"   ASUN binary: {vecBin.Length} B");
 Console.WriteLine("   ✓ vec roundtrip OK");
 
 // 10. Optional fields
@@ -89,7 +89,7 @@ foreach (var line in prettyArr.Split('\n')) Console.WriteLine($"   {line}");
 Console.WriteLine("\n=== All examples passed! ===");
 
 // Data classes must come after top-level statements
-record BasicUser(long Id, string Name, bool Active) : IAsonSchema
+record BasicUser(long Id, string Name, bool Active) : IAsunSchema
 {
     static readonly string[] _n = ["id", "name", "active"];
     static readonly string?[] _t = ["int", "str", "bool"];

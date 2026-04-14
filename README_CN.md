@@ -1,40 +1,40 @@
-# ason-csharp
+# asun-csharp
 
-[![NuGet](https://img.shields.io/nuget/v/Ason.svg)](https://www.nuget.org/packages/Ason)
+[![NuGet](https://img.shields.io/nuget/v/Asun.svg)](https://www.nuget.org/packages/Asun)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-高性能 [ASON](https://github.com/ason-lab/ason)（Array-Schema Object Notation）.NET 序列化/反序列化库 — 零拷贝、SIMD 加速、模式驱动的数据格式，专为 LLM 交互和大规模数据传输设计。
+高性能 [ASUN](https://github.com/asun-lab/asun)（Array-Schema Unified Notation）.NET 序列化/反序列化库 — 零拷贝、SIMD 加速、模式驱动的数据格式，专为 LLM 交互和大规模数据传输设计。
 
 [English](README.md)
 
-## 什么是 ASON？
+## 什么是 ASUN？
 
-ASON 将**模式（Schema）**与**数据**分离，消除 JSON 中重复的键名。模式只声明一次，数据行只包含值：
+ASUN 将**模式（Schema）**与**数据**分离，消除 JSON 中重复的键名。模式只声明一次，数据行只包含值：
 
 ```text
 JSON (100 tokens):
 {"users":[{"id":1,"name":"Alice","active":true},{"id":2,"name":"Bob","active":false}]}
 
-ASON (~35 tokens, 节省 65%):
+ASUN (~35 tokens, 节省 65%):
 [{id@int, name@str, active@bool}]:(1,Alice,true),(2,Bob,false)
 ```
 
-| 方面         | JSON         | ASON             |
-| ------------ | ------------ | ---------------- |
-| Token 效率   | 100%         | 30–70% ✓         |
-| 键名重复     | 每个对象都有 | 只声明一次 ✓     |
-| 人类可读     | 是           | 是 ✓             |
-| 嵌套结构     | ✓            | ✓                |
-| 字段绑定     | 无           | 内建 `@...` ✓    |
-| 序列化速度   | 1x           | **~1.2–9x 更快** ✓ |
-| 数据体积     | 100%         | **40–60%** ✓     |
+| 方面       | JSON         | ASUN               |
+| ---------- | ------------ | ------------------ |
+| Token 效率 | 100%         | 30–70% ✓           |
+| 键名重复   | 每个对象都有 | 只声明一次 ✓       |
+| 人类可读   | 是           | 是 ✓               |
+| 嵌套结构   | ✓            | ✓                  |
+| 字段绑定   | 无           | 内建 `@...` ✓      |
+| 序列化速度 | 1x           | **~1.2–9x 更快** ✓ |
+| 数据体积   | 100%         | **40–60%** ✓       |
 
 ## 快速上手
 
-添加 Ason NuGet 包：
+添加 Asun NuGet 包：
 
 ```bash
-dotnet add package Ason
+dotnet add package Asun
 ```
 
 发布出来的 NuGet 包是单包多目标，同时包含 `net8.0` 和 `net10.0` 资产。
@@ -54,9 +54,9 @@ dotnet add package Ason
 ### 定义模式类型
 
 ```csharp
-using Ason;
+using Asun;
 
-record User(long Id, string Name, bool Active) : IAsonSchema
+record User(long Id, string Name, bool Active) : IAsunSchema
 {
     static readonly string[] _names = ["id", "name", "active"];
     static readonly string?[] _types = ["int", "str", "bool"];
@@ -75,21 +75,21 @@ record User(long Id, string Name, bool Active) : IAsonSchema
 var user = new User(1, "Alice", true);
 
 // 编码
-var s = Ason.Ason.encode(user);
+var s = Asun.Asun.encode(user);
 // => "{id,name,active}:(1,Alice,true)"
 
 // 带基本类型提示编码
-var typed = Ason.Ason.encodeTyped(user);
+var typed = Asun.Asun.encodeTyped(user);
 // => "{id@int,name@str,active@bool}:(1,Alice,true)"
 
 // 解码
-var u2 = Ason.Ason.decodeWith(s, User.FromFields);
+var u2 = Asun.Asun.decodeWith(s, User.FromFields);
 // u2 == user ✓
 ```
 
 ### Vec 序列化（模式驱动）
 
-对于 `List<T>`，ASON 只写一次模式，每个元素以紧凑元组输出 — 这是相比 JSON 的关键优势：
+对于 `List<T>`，ASUN 只写一次模式，每个元素以紧凑元组输出 — 这是相比 JSON 的关键优势：
 
 ```csharp
 var users = new List<User> {
@@ -97,10 +97,10 @@ var users = new List<User> {
     new(2, "Bob", false),
 };
 
-var s = Ason.Ason.encode<User>(users);
+var s = Asun.Asun.encode<User>(users);
 // => "[{id,name,active}]:(1,Alice,true),(2,Bob,false)"
 
-var users2 = Ason.Ason.decodeListWith(s, User.FromFields);
+var users2 = Asun.Asun.decodeListWith(s, User.FromFields);
 // users2.Count == 2 ✓
 ```
 
@@ -108,9 +108,9 @@ var users2 = Ason.Ason.decodeListWith(s, User.FromFields);
 
 ```csharp
 // 零拷贝二进制编码（BinaryPrimitives，无中间分配）
-var bin = Ason.Ason.encodeBinary(user);
+var bin = Asun.Asun.encodeBinary(user);
 
-var u3 = Ason.Ason.decodeBinaryWith(bin,
+var u3 = Asun.Asun.decodeBinaryWith(bin,
     new[] { "id", "name", "active" },
     new[] { FieldType.Int, FieldType.String, FieldType.Bool },
     User.FromFields);
@@ -119,26 +119,26 @@ var u3 = Ason.Ason.decodeBinaryWith(bin,
 ### 美化格式
 
 ```csharp
-var pretty = Ason.Ason.encodePretty(user);
+var pretty = Asun.Asun.encodePretty(user);
 // => "{id, name, active}:(1, Alice, true)"
 
-var prettyTyped = Ason.Ason.encodePrettyTyped(user);
+var prettyTyped = Asun.Asun.encodePrettyTyped(user);
 // => "{id@int, name@str, active@bool}:(1, Alice, true)"
 ```
 
 ## 支持的类型
 
-| 类型          | ASON 表示              | 示例                   |
-| ------------- | ---------------------- | ---------------------- |
-| int           | 纯数字                 | `42`、`-100`           |
-| float         | 小数                   | `3.14`、`-0.5`         |
-| bool          | 字面量                 | `true`、`false`        |
-| str           | 不带引号或带引号       | `Alice`、`"Carol Smith"` |
-| 可选类型      | 值或空                 | `hello` 或 _(空白)_    |
-| List\<T\>     | `[v1,v2,v3]`          | `[rust,go,python]`     |
-| 嵌套结构      | `(field1,field2)`      | `(Engineering,500000)` |
+| 类型      | ASUN 表示         | 示例                     |
+| --------- | ----------------- | ------------------------ |
+| int       | 纯数字            | `42`、`-100`             |
+| float     | 小数              | `3.14`、`-0.5`           |
+| bool      | 字面量            | `true`、`false`          |
+| str       | 不带引号或带引号  | `Alice`、`"Carol Smith"` |
+| 可选类型  | 值或空            | `hello` 或 _(空白)_      |
+| List\<T\> | `[v1,v2,v3]`      | `[rust,go,python]`       |
+| 嵌套结构  | `(field1,field2)` | `(Engineering,500000)`   |
 
-当前 ASON 格式刻意不支持原生 `Dictionary<K,V>` / map 字段。
+当前 ASUN 格式刻意不支持原生 `Dictionary<K,V>` / map 字段。
 如果你需要键值集合，请显式建模成 entry-list 数组，例如：
 
 ```text
@@ -148,8 +148,8 @@ var prettyTyped = Ason.Ason.encodePrettyTyped(user);
 ### 嵌套结构
 
 ```csharp
-record Dept(string Title) : IAsonSchema { /* ... */ }
-record Employee(string Name, Dept Dept) : IAsonSchema { /* ... */ }
+record Dept(string Title) : IAsunSchema { /* ... */ }
+record Employee(string Name, Dept Dept) : IAsunSchema { /* ... */ }
 
 // 模式反映嵌套关系：
 // {name@str,dept@{title@str}}:(Alice,(Engineering))
@@ -186,39 +186,39 @@ record Employee(string Name, Dept Dept) : IAsonSchema { /* ... */ }
 
 ## API 参考
 
-| 函数                             | 描述                              |
-| -------------------------------- | --------------------------------- |
-| `Ason.encode(T)`                 | 序列化结构体 → 不带基本类型提示的 schema |
-| `Ason.encodeTyped(T)`            | 序列化结构体 → 带基本类型提示的 schema   |
-| `Ason.encode<T>(List<T>)`        | 序列化列表 → 模式只写一次        |
-| `Ason.encodeTyped<T>(List<T>)`   | 序列化列表 → 带基本类型提示的 schema |
-| `Ason.decode(string)`            | 反序列化 → 字段袋（`Dictionary<string, object?>`） |
-| `Ason.decodeWith<T>(s, fn)`      | 反序列化 → 通过工厂函数生成 T    |
-| `Ason.decodeListWith<T>(s, fn)`  | 反序列化 → List\<T\>             |
-| `Ason.encodeBinary(T)`           | 二进制编码（零拷贝 BinaryPrimitives）|
-| `Ason.decodeBinaryWith<T>(…)`    | 二进制解码 → 类型化 T            |
-| `Ason.encodePretty(T)`           | 美化格式编码                      |
-| `Ason.encodePrettyTyped(T)`      | 美化格式 + 基本类型提示           |
+| 函数                            | 描述                                               |
+| ------------------------------- | -------------------------------------------------- |
+| `Asun.encode(T)`                | 序列化结构体 → 不带基本类型提示的 schema           |
+| `Asun.encodeTyped(T)`           | 序列化结构体 → 带基本类型提示的 schema             |
+| `Asun.encode<T>(List<T>)`       | 序列化列表 → 模式只写一次                          |
+| `Asun.encodeTyped<T>(List<T>)`  | 序列化列表 → 带基本类型提示的 schema               |
+| `Asun.decode(string)`           | 反序列化 → 字段袋（`Dictionary<string, object?>`） |
+| `Asun.decodeWith<T>(s, fn)`     | 反序列化 → 通过工厂函数生成 T                      |
+| `Asun.decodeListWith<T>(s, fn)` | 反序列化 → List\<T\>                               |
+| `Asun.encodeBinary(T)`          | 二进制编码（零拷贝 BinaryPrimitives）              |
+| `Asun.decodeBinaryWith<T>(…)`   | 二进制解码 → 类型化 T                              |
+| `Asun.encodePretty(T)`          | 美化格式编码                                       |
+| `Asun.encodePrettyTyped(T)`     | 美化格式 + 基本类型提示                            |
 
 ## Bench 输出
 
 通过下面命令运行自带 benchmark：
 
 ```bash
-dotnet run --project examples/Bench/Ason.Examples.Bench.csproj -c Release -f net10.0
+dotnet run --project examples/Bench/Asun.Examples.Bench.csproj -c Release -f net10.0
 ```
 
 关键结果：
 
 ```text
   Flat struct × 500 (8 fields, vec)
-    Serialize:   JSON 16.22ms/60784B | ASON 10.11ms(1.6x)/28327B(46.6%) | BIN 4.92ms(3.3x)/37230B(61.2%)
-    Deserialize: JSON    22.09ms | ASON     5.70ms(3.9x) | BIN     2.11ms(10.5x)
+    Serialize:   JSON 16.22ms/60784B | ASUN 10.11ms(1.6x)/28327B(46.6%) | BIN 4.92ms(3.3x)/37230B(61.2%)
+    Deserialize: JSON    22.09ms | ASUN     5.70ms(3.9x) | BIN     2.11ms(10.5x)
 ```
 
 具体耗时会随运行时、CPU、以及 `Debug/Release` 模式而变化。
 
-## 为什么 ASON 表现更好？
+## 为什么 ASUN 表现更好？
 
 1. **零键哈希** — 模式只解析一次；数据字段按位置索引 `O(1)` 映射，无逐行键字符串哈希。
 2. **模式驱动解析** — 反序列化器预知每个字段的期望类型，可直接解析。CPU 分支预测命中率 ~100%。
@@ -251,7 +251,7 @@ dotnet run --project examples/Basic -f net10.0
 # 复杂嵌套结构、转义、5层深度嵌套
 dotnet run --project examples/Complex -f net10.0
 
-# 性能基准测试（ASON vs JSON）
+# 性能基准测试（ASUN vs JSON）
 dotnet run --project examples/Bench -c Release -f net10.0
 ```
 
@@ -262,9 +262,9 @@ dotnet run --project examples/Basic -f net8.0
 dotnet run --project examples/Basic -f net10.0
 ```
 
-## ASON 格式规范
+## ASUN 格式规范
 
-请参阅完整的 [ASON 规范](https://github.com/ason-lab/ason/blob/main/docs/ASON_SPEC_CN.md)，了解语法规则、BNF 文法、转义规则、类型系统和 LLM 集成最佳实践。
+请参阅完整的 [ASUN 规范](https://github.com/asun-lab/asun/blob/main/docs/ASUN_SPEC_CN.md)，了解语法规则、BNF 文法、转义规则、类型系统和 LLM 集成最佳实践。
 
 ### 语法快速参考
 

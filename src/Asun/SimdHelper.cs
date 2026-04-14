@@ -1,15 +1,15 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace Ason;
+namespace Asun;
 
 /// <summary>
-/// SIMD-accelerated helpers for scanning special characters in ASON strings.
+/// SIMD-accelerated helpers for scanning special characters in ASUN strings.
 /// Uses .NET SearchValues which auto-selects SSE2/AVX2/AdvSimd at runtime.
 /// </summary>
 internal static class SimdHelper
 {
-    // ASON special chars: , @ ( ) [ ] { } : " \ \n \r \t
+    // ASUN special chars: , @ ( ) [ ] { } : " \ \n \r \t
     private static readonly SearchValues<char> s_specialChars =
         SearchValues.Create(",@()[]{}:\"\\'\n\r\t");
 

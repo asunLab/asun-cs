@@ -3,16 +3,16 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
-using Ason;
-using AEncoder = Ason.Encoder;
-using ADecoder = Ason.Decoder;
+using Asun;
+using AEncoder = Asun.Encoder;
+using ADecoder = Asun.Decoder;
 
 internal static class Program
 {
     static void Main()
     {
         Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
-        Console.WriteLine("║            ASON vs JSON Comprehensive Benchmark              ║");
+        Console.WriteLine("║            ASUN vs JSON Comprehensive Benchmark              ║");
         Console.WriteLine("╚══════════════════════════════════════════════════════════════╝");
         Console.WriteLine();
         Console.WriteLine($"System: {RuntimeInformation.OSDescription} {RuntimeInformation.ProcessArchitecture} | .NET {Environment.Version}");
@@ -47,10 +47,10 @@ internal static class Program
 
         PrintSection("Section 4: Single Struct Roundtrip (10000x)", 48);
         Console.WriteLine();
-        var (asonFlat, jsonFlat) = BenchSingleRoundtrip(10_000);
-        Console.WriteLine($"  Flat:  ASON {asonFlat,8:F2}ms | JSON {jsonFlat,8:F2}ms | ratio {jsonFlat / asonFlat:F2}x");
-        var (asonDeep, jsonDeep) = BenchDeepSingleRoundtrip(10_000);
-        Console.WriteLine($"  Deep:  ASON {asonDeep,8:F2}ms | JSON {jsonDeep,8:F2}ms | ratio {jsonDeep / asonDeep:F2}x");
+        var (asunFlat, jsonFlat) = BenchSingleRoundtrip(10_000);
+        Console.WriteLine($"  Flat:  ASUN {asunFlat,8:F2}ms | JSON {jsonFlat,8:F2}ms | ratio {jsonFlat / asunFlat:F2}x");
+        var (asunDeep, jsonDeep) = BenchDeepSingleRoundtrip(10_000);
+        Console.WriteLine($"  Deep:  ASUN {asunDeep,8:F2}ms | JSON {jsonDeep,8:F2}ms | ratio {jsonDeep / asunDeep:F2}x");
 
         Console.WriteLine();
         PrintSection("Section 5: Large Payload (10k records)", 48);
@@ -112,14 +112,14 @@ internal static class Program
         {
             var users = DataGen.GenerateUsers(1000);
             var json = JsonSerializer.Serialize(users);
-            var ason = AEncoder.Encode<BUser>(users);
+            var asun = AEncoder.Encode<BUser>(users);
             const int throughputIters = 100;
 
             var jsonSerSecs = MeasureMs(() =>
             {
                 for (int i = 0; i < throughputIters; i++) JsonSerializer.Serialize(users);
             }) / 1000.0;
-            var asonSerSecs = MeasureMs(() =>
+            var asunSerSecs = MeasureMs(() =>
             {
                 for (int i = 0; i < throughputIters; i++) AEncoder.Encode<BUser>(users);
             }) / 1000.0;
@@ -127,20 +127,20 @@ internal static class Program
             {
                 for (int i = 0; i < throughputIters; i++) JsonSerializer.Deserialize<List<BUser>>(json);
             }) / 1000.0;
-            var asonDeSecs = MeasureMs(() =>
+            var asunDeSecs = MeasureMs(() =>
             {
-                for (int i = 0; i < throughputIters; i++) ADecoder.DecodeListWith(ason, BUser.FromFields);
+                for (int i = 0; i < throughputIters; i++) ADecoder.DecodeListWith(asun, BUser.FromFields);
             }) / 1000.0;
 
             var totalRecords = 1000.0 * throughputIters;
             Console.WriteLine($"  Serialize throughput (1000 records × {throughputIters} iters):");
             Console.WriteLine($"    JSON: {totalRecords / jsonSerSecs:F0} records/s");
-            Console.WriteLine($"    ASON: {totalRecords / asonSerSecs:F0} records/s");
-            Console.WriteLine($"    Speed: {jsonSerSecs / asonSerSecs:F2}x");
+            Console.WriteLine($"    ASUN: {totalRecords / asunSerSecs:F0} records/s");
+            Console.WriteLine($"    Speed: {jsonSerSecs / asunSerSecs:F2}x");
             Console.WriteLine("  Deserialize throughput:");
             Console.WriteLine($"    JSON: {totalRecords / jsonDeSecs:F0} records/s");
-            Console.WriteLine($"    ASON: {totalRecords / asonDeSecs:F0} records/s");
-            Console.WriteLine($"    Speed: {jsonDeSecs / asonDeSecs:F2}x");
+            Console.WriteLine($"    ASUN: {totalRecords / asunDeSecs:F0} records/s");
+            Console.WriteLine($"    Speed: {jsonDeSecs / asunDeSecs:F2}x");
         }
 
         Console.WriteLine();
@@ -155,10 +155,10 @@ internal static class Program
         var users = DataGen.GenerateUsers(100);
         var companies = DataGen.GenerateCompanies(10);
         var userJson = JsonSerializer.Serialize(users);
-        var userAson = AEncoder.Encode<BUser>(users);
+        var userAsun = AEncoder.Encode<BUser>(users);
         var userBin = BinaryCodec.EncodeBinary<BUser>(users);
         var companyJson = JsonSerializer.Serialize(companies);
-        var companyAson = AEncoder.Encode<BCompany>(companies);
+        var companyAsun = AEncoder.Encode<BCompany>(companies);
         var companyBin = BinaryCodec.EncodeBinary<BCompany>(companies);
 
         for (int i = 0; i < 200; i++)
@@ -167,7 +167,7 @@ internal static class Program
             AEncoder.Encode<BUser>(users);
             BinaryCodec.EncodeBinary<BUser>(users);
             JsonSerializer.Deserialize<List<BUser>>(userJson);
-            ADecoder.DecodeListWith(userAson, BUser.FromFields);
+            ADecoder.DecodeListWith(userAsun, BUser.FromFields);
             BinaryCodec.DecodeBinaryListWith(userBin, BUser.Fields, BUser.BinaryTypes, BUser.FromFields);
         }
 
@@ -177,7 +177,7 @@ internal static class Program
             AEncoder.Encode<BCompany>(companies);
             BinaryCodec.EncodeBinary<BCompany>(companies);
             JsonSerializer.Deserialize<List<BCompany>>(companyJson);
-            ADecoder.DecodeListWith(companyAson, BCompany.FromFields);
+            ADecoder.DecodeListWith(companyAsun, BCompany.FromFields);
             BenchDecode.DecodeCompanyListBinary(companyBin);
         }
         Console.WriteLine("Warmup complete.");
@@ -187,14 +187,14 @@ internal static class Program
     {
         var users = DataGen.GenerateUsers(count);
         var json = JsonSerializer.Serialize(users);
-        var ason = AEncoder.Encode<BUser>(users);
+        var asun = AEncoder.Encode<BUser>(users);
         var bin = BinaryCodec.EncodeBinary<BUser>(users);
 
         var jsonSer = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++) JsonSerializer.Serialize(users);
         });
-        var asonSer = MeasureMs(() =>
+        var asunSer = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++) AEncoder.Encode<BUser>(users);
         });
@@ -206,9 +206,9 @@ internal static class Program
         {
             for (int i = 0; i < iterations; i++) JsonSerializer.Deserialize<List<BUser>>(json);
         });
-        var asonDe = MeasureMs(() =>
+        var asunDe = MeasureMs(() =>
         {
-            for (int i = 0; i < iterations; i++) ADecoder.DecodeListWith(ason, BUser.FromFields);
+            for (int i = 0; i < iterations; i++) ADecoder.DecodeListWith(asun, BUser.FromFields);
         });
         var binDe = MeasureMs(() =>
         {
@@ -217,23 +217,23 @@ internal static class Program
 
         return new BenchResult(
             $"Flat struct × {count} (8 fields, vec)",
-            jsonSer, asonSer, binSer,
-            jsonDe, asonDe, binDe,
-            Utf8Bytes(json), Utf8Bytes(ason), bin.Length);
+            jsonSer, asunSer, binSer,
+            jsonDe, asunDe, binDe,
+            Utf8Bytes(json), Utf8Bytes(asun), bin.Length);
     }
 
     static BenchResult BenchAllTypes(int count, int iterations)
     {
         var items = DataGen.GenerateAllTypes(count);
         var json = JsonSerializer.Serialize(items);
-        var ason = AEncoder.Encode<BAllTypes>(items);
+        var asun = AEncoder.Encode<BAllTypes>(items);
         var bin = BinaryCodec.EncodeBinary<BAllTypes>(items);
 
         var jsonSer = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++) JsonSerializer.Serialize(items);
         });
-        var asonSer = MeasureMs(() =>
+        var asunSer = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++) AEncoder.Encode<BAllTypes>(items);
         });
@@ -245,9 +245,9 @@ internal static class Program
         {
             for (int i = 0; i < iterations; i++) JsonSerializer.Deserialize<List<BAllTypes>>(json);
         });
-        var asonDe = MeasureMs(() =>
+        var asunDe = MeasureMs(() =>
         {
-            for (int i = 0; i < iterations; i++) ADecoder.DecodeListWith(ason, BAllTypes.FromFields);
+            for (int i = 0; i < iterations; i++) ADecoder.DecodeListWith(asun, BAllTypes.FromFields);
         });
         var binDe = MeasureMs(() =>
         {
@@ -256,23 +256,23 @@ internal static class Program
 
         return new BenchResult(
             $"All-types struct × {count} (16 fields, vec)",
-            jsonSer, asonSer, binSer,
-            jsonDe, asonDe, binDe,
-            Utf8Bytes(json), Utf8Bytes(ason), bin.Length);
+            jsonSer, asunSer, binSer,
+            jsonDe, asunDe, binDe,
+            Utf8Bytes(json), Utf8Bytes(asun), bin.Length);
     }
 
     static BenchResult BenchDeep(int count, int iterations)
     {
         var companies = DataGen.GenerateCompanies(count);
         var json = JsonSerializer.Serialize(companies);
-        var ason = AEncoder.Encode<BCompany>(companies);
+        var asun = AEncoder.Encode<BCompany>(companies);
         var bin = BinaryCodec.EncodeBinary<BCompany>(companies);
 
         var jsonSer = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++) JsonSerializer.Serialize(companies);
         });
-        var asonSer = MeasureMs(() =>
+        var asunSer = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++) AEncoder.Encode<BCompany>(companies);
         });
@@ -284,9 +284,9 @@ internal static class Program
         {
             for (int i = 0; i < iterations; i++) JsonSerializer.Deserialize<List<BCompany>>(json);
         });
-        var asonDe = MeasureMs(() =>
+        var asunDe = MeasureMs(() =>
         {
-            for (int i = 0; i < iterations; i++) ADecoder.DecodeListWith(ason, BCompany.FromFields);
+            for (int i = 0; i < iterations; i++) ADecoder.DecodeListWith(asun, BCompany.FromFields);
         });
         var binDe = MeasureMs(() =>
         {
@@ -295,16 +295,16 @@ internal static class Program
 
         return new BenchResult(
             $"5-level deep × {count} (Company>Division>Team>Project>Task)",
-            jsonSer, asonSer, binSer,
-            jsonDe, asonDe, binDe,
-            Utf8Bytes(json), Utf8Bytes(ason), bin.Length);
+            jsonSer, asunSer, binSer,
+            jsonDe, asunDe, binDe,
+            Utf8Bytes(json), Utf8Bytes(asun), bin.Length);
     }
 
-    static (double asonMs, double jsonMs) BenchSingleRoundtrip(int iterations)
+    static (double asunMs, double jsonMs) BenchSingleRoundtrip(int iterations)
     {
         var user = DataGen.GenerateUsers(1)[0];
 
-        var asonMs = MeasureMs(() =>
+        var asunMs = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++)
             {
@@ -321,14 +321,14 @@ internal static class Program
             }
         });
 
-        return (asonMs, jsonMs);
+        return (asunMs, jsonMs);
     }
 
-    static (double asonMs, double jsonMs) BenchDeepSingleRoundtrip(int iterations)
+    static (double asunMs, double jsonMs) BenchDeepSingleRoundtrip(int iterations)
     {
         var company = DataGen.GenerateCompanies(1)[0];
 
-        var asonMs = MeasureMs(() =>
+        var asunMs = MeasureMs(() =>
         {
             for (int i = 0; i < iterations; i++)
             {
@@ -345,7 +345,7 @@ internal static class Program
             }
         });
 
-        return (asonMs, jsonMs);
+        return (asunMs, jsonMs);
     }
 
     static double MeasureMs(Action action)
@@ -464,15 +464,15 @@ internal static class Program
         }
     }
 
-    record BUser(long Id, string Name, string Email, long Age, double Score, bool Active, string Role, string City) : IAsonSchema
+    record BUser(long Id, string Name, string Email, long Age, double Score, bool Active, string Role, string City) : IAsunSchema
     {
         public static readonly string[] Fields = ["id", "name", "email", "age", "score", "active", "role", "city"];
         public static readonly string?[] Types = ["int", "str", "str", "int", "float", "bool", "str", "str"];
         public static readonly FieldType[] BinaryTypes = [FieldType.Int, FieldType.String, FieldType.String, FieldType.Int, FieldType.Double, FieldType.Bool, FieldType.String, FieldType.String];
 
-        ReadOnlySpan<string> IAsonSchema.FieldNames => Fields;
-        ReadOnlySpan<string?> IAsonSchema.FieldTypes => Types;
-        object?[] IAsonSchema.FieldValues => [Id, Name, Email, Age, Score, Active, Role, City];
+        ReadOnlySpan<string> IAsunSchema.FieldNames => Fields;
+        ReadOnlySpan<string?> IAsunSchema.FieldTypes => Types;
+        object?[] IAsunSchema.FieldValues => [Id, Name, Email, Age, Score, Active, Role, City];
 
         public static BUser FromFields(Dictionary<string, object?> m) =>
             new(Convert.ToInt64(m["id"]), (string)m["name"]!, (string)m["email"]!,
@@ -496,17 +496,17 @@ internal static class Program
         List<long> VecInt,
         List<double> VecFloat,
         List<string> VecStr,
-        List<bool> VecBool) : IAsonSchema
+        List<bool> VecBool) : IAsunSchema
     {
         public static readonly string[] Fields = ["b", "i32v", "i64v", "f64v", "f64b", "s", "label", "enabled", "opt_some", "opt_none", "note", "flag_opt", "vec_int", "vec_float", "vec_str", "vec_bool"];
         public static readonly string?[] Types = ["bool", "int", "int", "float", "float", "str", "str", "bool", "int?", "int?", "str?", "bool?", "[int]", "[float]", "[str]", "[bool]"];
         public static readonly FieldType[] BinaryTypes = [FieldType.Bool, FieldType.Int, FieldType.Int, FieldType.Double, FieldType.Double, FieldType.String, FieldType.String, FieldType.Bool, FieldType.OptionalInt, FieldType.OptionalInt, FieldType.OptionalString, FieldType.OptionalBool, FieldType.ListInt, FieldType.ListDouble, FieldType.ListString, FieldType.ListBool];
 
-        ReadOnlySpan<string> IAsonSchema.FieldNames => Fields;
-        ReadOnlySpan<string?> IAsonSchema.FieldTypes => Types;
-        object?[] IAsonSchema.FieldValues => [B, I32v, I64v, F64v, F64b, S, Label, Enabled, OptSome, OptNone, Note, FlagOpt, VecInt, VecFloat, VecStr, VecBool];
+        ReadOnlySpan<string> IAsunSchema.FieldNames => Fields;
+        ReadOnlySpan<string?> IAsunSchema.FieldTypes => Types;
+        object?[] IAsunSchema.FieldValues => [B, I32v, I64v, F64v, F64b, S, Label, Enabled, OptSome, OptNone, Note, FlagOpt, VecInt, VecFloat, VecStr, VecBool];
 
-        void IAsonSchema.WriteBinaryValues(ref BinWriter bw)
+        void IAsunSchema.WriteBinaryValues(ref BinWriter bw)
         {
             bw.WriteBool(B);
             bw.WriteI64(I32v);
@@ -555,13 +555,13 @@ internal static class Program
                 BenchDecode.AsBoolList(m["vec_bool"]));
     }
 
-    record BTask(long Id, string Title, long Priority, bool Done, double Hours) : IAsonSchema
+    record BTask(long Id, string Title, long Priority, bool Done, double Hours) : IAsunSchema
     {
         static readonly string[] Names = ["id", "title", "priority", "done", "hours"];
         static readonly string?[] Types = ["int", "str", "int", "bool", "float"];
-        ReadOnlySpan<string> IAsonSchema.FieldNames => Names;
-        ReadOnlySpan<string?> IAsonSchema.FieldTypes => Types;
-        object?[] IAsonSchema.FieldValues => [Id, Title, Priority, Done, Hours];
+        ReadOnlySpan<string> IAsunSchema.FieldNames => Names;
+        ReadOnlySpan<string?> IAsunSchema.FieldTypes => Types;
+        object?[] IAsunSchema.FieldValues => [Id, Title, Priority, Done, Hours];
 
         public static BTask FromFields(Dictionary<string, object?> m) =>
             new(Convert.ToInt64(m["id"]), (string)m["title"]!, Convert.ToInt64(m["priority"]), Convert.ToBoolean(m["done"]), Convert.ToDouble(m["hours"]));
@@ -579,13 +579,13 @@ internal static class Program
         }
     }
 
-    record BProject(string Name, double Budget, bool Active, List<BTask> Tasks) : IAsonSchema
+    record BProject(string Name, double Budget, bool Active, List<BTask> Tasks) : IAsunSchema
     {
         static readonly string[] Names = ["name", "budget", "active", "tasks"];
         static readonly string?[] Types = ["str", "float", "bool", null];
-        ReadOnlySpan<string> IAsonSchema.FieldNames => Names;
-        ReadOnlySpan<string?> IAsonSchema.FieldTypes => Types;
-        object?[] IAsonSchema.FieldValues => [Name, Budget, Active, Tasks];
+        ReadOnlySpan<string> IAsunSchema.FieldNames => Names;
+        ReadOnlySpan<string?> IAsunSchema.FieldTypes => Types;
+        object?[] IAsunSchema.FieldValues => [Name, Budget, Active, Tasks];
 
         public static BProject FromFields(Dictionary<string, object?> m) =>
             new((string)m["name"]!, Convert.ToDouble(m["budget"]), Convert.ToBoolean(m["active"]), BenchDecode.AsObjectList(m["tasks"]).ConvertAll(BTask.FromValue));
@@ -602,13 +602,13 @@ internal static class Program
         }
     }
 
-    record BTeam(string Name, string Lead, long Size, List<BProject> Projects) : IAsonSchema
+    record BTeam(string Name, string Lead, long Size, List<BProject> Projects) : IAsunSchema
     {
         static readonly string[] Names = ["name", "lead", "size", "projects"];
         static readonly string?[] Types = ["str", "str", "int", null];
-        ReadOnlySpan<string> IAsonSchema.FieldNames => Names;
-        ReadOnlySpan<string?> IAsonSchema.FieldTypes => Types;
-        object?[] IAsonSchema.FieldValues => [Name, Lead, Size, Projects];
+        ReadOnlySpan<string> IAsunSchema.FieldNames => Names;
+        ReadOnlySpan<string?> IAsunSchema.FieldTypes => Types;
+        object?[] IAsunSchema.FieldValues => [Name, Lead, Size, Projects];
 
         public static BTeam FromFields(Dictionary<string, object?> m) =>
             new((string)m["name"]!, (string)m["lead"]!, Convert.ToInt64(m["size"]), BenchDecode.AsObjectList(m["projects"]).ConvertAll(BProject.FromValue));
@@ -625,13 +625,13 @@ internal static class Program
         }
     }
 
-    record BDivision(string Name, string Location, long Headcount, List<BTeam> Teams) : IAsonSchema
+    record BDivision(string Name, string Location, long Headcount, List<BTeam> Teams) : IAsunSchema
     {
         static readonly string[] Names = ["name", "location", "headcount", "teams"];
         static readonly string?[] Types = ["str", "str", "int", null];
-        ReadOnlySpan<string> IAsonSchema.FieldNames => Names;
-        ReadOnlySpan<string?> IAsonSchema.FieldTypes => Types;
-        object?[] IAsonSchema.FieldValues => [Name, Location, Headcount, Teams];
+        ReadOnlySpan<string> IAsunSchema.FieldNames => Names;
+        ReadOnlySpan<string?> IAsunSchema.FieldTypes => Types;
+        object?[] IAsunSchema.FieldValues => [Name, Location, Headcount, Teams];
 
         public static BDivision FromFields(Dictionary<string, object?> m) =>
             new((string)m["name"]!, (string)m["location"]!, Convert.ToInt64(m["headcount"]), BenchDecode.AsObjectList(m["teams"]).ConvertAll(BTeam.FromValue));
@@ -648,13 +648,13 @@ internal static class Program
         }
     }
 
-    record BCompany(string Name, long Founded, double RevenueM, bool Public, List<BDivision> Divisions, List<string> Tags) : IAsonSchema
+    record BCompany(string Name, long Founded, double RevenueM, bool Public, List<BDivision> Divisions, List<string> Tags) : IAsunSchema
     {
         static readonly string[] Names = ["name", "founded", "revenue_m", "public", "divisions", "tags"];
         static readonly string?[] Types = ["str", "int", "float", "bool", null, "[str]"];
-        ReadOnlySpan<string> IAsonSchema.FieldNames => Names;
-        ReadOnlySpan<string?> IAsonSchema.FieldTypes => Types;
-        object?[] IAsonSchema.FieldValues => [Name, Founded, RevenueM, Public, Divisions, Tags];
+        ReadOnlySpan<string> IAsunSchema.FieldNames => Names;
+        ReadOnlySpan<string?> IAsunSchema.FieldTypes => Types;
+        object?[] IAsunSchema.FieldValues => [Name, Founded, RevenueM, Public, Divisions, Tags];
 
         public static BCompany FromFields(Dictionary<string, object?> m) =>
             new((string)m["name"]!, Convert.ToInt64(m["founded"]), Convert.ToDouble(m["revenue_m"]), Convert.ToBoolean(m["public"]), BenchDecode.AsObjectList(m["divisions"]).ConvertAll(BDivision.FromValue), BenchDecode.AsStringList(m["tags"]));
@@ -786,22 +786,22 @@ internal static class Program
     readonly record struct BenchResult(
         string Name,
         double JsonSerMs,
-        double AsonSerMs,
+        double AsunSerMs,
         double BinSerMs,
         double JsonDeMs,
-        double AsonDeMs,
+        double AsunDeMs,
         double BinDeMs,
         int JsonBytes,
-        int AsonBytes,
+        int AsunBytes,
         int BinBytes)
     {
         public void Print()
         {
             Console.WriteLine($"  {Name}");
             Console.WriteLine(
-                $"    Serialize:   JSON {JsonSerMs:F2}ms/{JsonBytes}B | ASON {AsonSerMs:F2}ms({Program.FormatRatio(JsonSerMs, AsonSerMs)})/{AsonBytes}B({Program.FormatPercent(AsonBytes, JsonBytes)}) | BIN {BinSerMs:F2}ms({Program.FormatRatio(JsonSerMs, BinSerMs)})/{BinBytes}B({Program.FormatPercent(BinBytes, JsonBytes)})");
+                $"    Serialize:   JSON {JsonSerMs:F2}ms/{JsonBytes}B | ASUN {AsunSerMs:F2}ms({Program.FormatRatio(JsonSerMs, AsunSerMs)})/{AsunBytes}B({Program.FormatPercent(AsunBytes, JsonBytes)}) | BIN {BinSerMs:F2}ms({Program.FormatRatio(JsonSerMs, BinSerMs)})/{BinBytes}B({Program.FormatPercent(BinBytes, JsonBytes)})");
             Console.WriteLine(
-                $"    Deserialize: JSON {JsonDeMs,8:F2}ms | ASON {AsonDeMs,8:F2}ms({Program.FormatRatio(JsonDeMs, AsonDeMs)}) | BIN {BinDeMs,8:F2}ms({Program.FormatRatio(JsonDeMs, BinDeMs)})");
+                $"    Deserialize: JSON {JsonDeMs,8:F2}ms | ASUN {AsunDeMs,8:F2}ms({Program.FormatRatio(JsonDeMs, AsunDeMs)}) | BIN {BinDeMs,8:F2}ms({Program.FormatRatio(JsonDeMs, BinDeMs)})");
         }
     }
 }

@@ -1,13 +1,13 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace Ason;
+namespace Asun;
 
 /// <summary>
-/// High-performance value writer for ASON encoding.
+/// High-performance value writer for ASUN encoding.
 /// Uses ArrayPool to avoid allocations. All writes go directly to a char buffer.
 /// </summary>
-public struct AsonWriter : IDisposable
+public struct AsunWriter : IDisposable
 {
     private char[] _buf;
     private int _pos;
@@ -16,7 +16,7 @@ public struct AsonWriter : IDisposable
     public readonly bool IsEmpty => _buf == null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AsonWriter(int initialCapacity = 256)
+    public AsunWriter(int initialCapacity = 256)
     {
         _buf = ArrayPool<char>.Shared.Rent(initialCapacity);
         _pos = 0;
@@ -185,21 +185,21 @@ public struct AsonWriter : IDisposable
             case double d: WriteDouble(d); break;
             case string s: WriteString(s); break;
             case System.Collections.IDictionary:
-                throw AsonException.UnsupportedMap;
-            case IAsonSchema schema:
+                throw AsunException.UnsupportedMap;
+            case IAsunSchema schema:
                 WriteChar('(');
                 schema.WriteValues(ref this);
                 WriteChar(')');
                 break;
             case System.Collections.IList list:
-                if (list.Count > 0 && list[0] is IAsonSchema)
+                if (list.Count > 0 && list[0] is IAsunSchema)
                 {
                     WriteChar('[');
                     for (int i = 0; i < list.Count; i++)
                     {
                         if (i > 0) WriteChar(',');
                         WriteChar('(');
-                        ((IAsonSchema)list[i]!).WriteValues(ref this);
+                        ((IAsunSchema)list[i]!).WriteValues(ref this);
                         WriteChar(')');
                     }
                     WriteChar(']');

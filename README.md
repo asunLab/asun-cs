@@ -1,40 +1,40 @@
-# ason-csharp
+# asun-csharp
 
-[![NuGet](https://img.shields.io/nuget/v/Ason.svg)](https://www.nuget.org/packages/Ason)
+[![NuGet](https://img.shields.io/nuget/v/Asun.svg)](https://www.nuget.org/packages/Asun)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A high-performance [ASON](https://github.com/ason-lab/ason) (Array-Schema Object Notation) serialization/deserialization library for .NET — zero-copy, SIMD-accelerated, schema-driven data format designed for LLM interactions and large-scale data transmission.
+A high-performance [ASUN](https://github.com/asun-lab/asun) (Array-Schema Unified Notation) serialization/deserialization library for .NET — zero-copy, SIMD-accelerated, schema-driven data format designed for LLM interactions and large-scale data transmission.
 
 [中文文档](README_CN.md)
 
-## What is ASON?
+## What is ASUN?
 
-ASON separates **schema** from **data**, eliminating repetitive keys found in JSON. The schema is declared once, and data rows carry only values:
+ASUN separates **schema** from **data**, eliminating repetitive keys found in JSON. The schema is declared once, and data rows carry only values:
 
 ```text
 JSON (100 tokens):
 {"users":[{"id":1,"name":"Alice","active":true},{"id":2,"name":"Bob","active":false}]}
 
-ASON (~35 tokens, 65% saving):
+ASUN (~35 tokens, 65% saving):
 [{id@int, name@str, active@bool}]:(1,Alice,true),(2,Bob,false)
 ```
 
-| Aspect              | JSON         | ASON             |
-| ------------------- | ------------ | ---------------- |
-| Token efficiency    | 100%         | 30–70% ✓         |
-| Key repetition      | Every object | Declared once ✓  |
-| Human readable      | Yes          | Yes ✓            |
-| Nested structs      | ✓            | ✓                |
-| Type annotations    | No           | Optional ✓       |
+| Aspect              | JSON         | ASUN                 |
+| ------------------- | ------------ | -------------------- |
+| Token efficiency    | 100%         | 30–70% ✓             |
+| Key repetition      | Every object | Declared once ✓      |
+| Human readable      | Yes          | Yes ✓                |
+| Nested structs      | ✓            | ✓                    |
+| Type annotations    | No           | Optional ✓           |
 | Serialization speed | 1x           | **~1.2–8x faster** ✓ |
-| Data size           | 100%         | **40–60%** ✓     |
+| Data size           | 100%         | **40–60%** ✓         |
 
 ## Quick Start
 
-Add the Ason NuGet package:
+Add the Asun NuGet package:
 
 ```bash
-dotnet add package Ason
+dotnet add package Asun
 ```
 
 The published NuGet package ships a single package with assets for both `net8.0` and `net10.0`.
@@ -54,9 +54,9 @@ or:
 ### Define a Schema Type
 
 ```csharp
-using Ason;
+using Asun;
 
-record User(long Id, string Name, bool Active) : IAsonSchema
+record User(long Id, string Name, bool Active) : IAsunSchema
 {
     static readonly string[] _names = ["id", "name", "active"];
     static readonly string?[] _types = ["int", "str", "bool"];
@@ -75,21 +75,21 @@ record User(long Id, string Name, bool Active) : IAsonSchema
 var user = new User(1, "Alice", true);
 
 // Encode
-var s = Ason.Ason.encode(user);
+var s = Asun.Asun.encode(user);
 // => "{id,name,active}:(1,Alice,true)"
 
 // Encode with scalar type hints
-var typed = Ason.Ason.encodeTyped(user);
+var typed = Asun.Asun.encodeTyped(user);
 // => "{id@int,name@str,active@bool}:(1,Alice,true)"
 
 // Decode
-var u2 = Ason.Ason.decodeWith(s, User.FromFields);
+var u2 = Asun.Asun.decodeWith(s, User.FromFields);
 // u2 == user ✓
 ```
 
 ### Vec Serialization (Schema-Driven)
 
-For `List<T>`, ASON writes the schema **once** and emits each element as a compact tuple — the key advantage over JSON:
+For `List<T>`, ASUN writes the schema **once** and emits each element as a compact tuple — the key advantage over JSON:
 
 ```csharp
 var users = new List<User> {
@@ -97,10 +97,10 @@ var users = new List<User> {
     new(2, "Bob", false),
 };
 
-var s = Ason.Ason.encode<User>(users);
+var s = Asun.Asun.encode<User>(users);
 // => "[{id,name,active}]:(1,Alice,true),(2,Bob,false)"
 
-var users2 = Ason.Ason.decodeListWith(s, User.FromFields);
+var users2 = Asun.Asun.decodeListWith(s, User.FromFields);
 // users2.Count == 2 ✓
 ```
 
@@ -108,9 +108,9 @@ var users2 = Ason.Ason.decodeListWith(s, User.FromFields);
 
 ```csharp
 // Zero-copy binary encoding (BinaryPrimitives, no intermediate allocation)
-var bin = Ason.Ason.encodeBinary(user);
+var bin = Asun.Asun.encodeBinary(user);
 
-var u3 = Ason.Ason.decodeBinaryWith(bin,
+var u3 = Asun.Asun.decodeBinaryWith(bin,
     new[] { "id", "name", "active" },
     new[] { FieldType.Int, FieldType.String, FieldType.Bool },
     User.FromFields);
@@ -119,26 +119,26 @@ var u3 = Ason.Ason.decodeBinaryWith(bin,
 ### Pretty Format
 
 ```csharp
-var pretty = Ason.Ason.encodePretty(user);
+var pretty = Asun.Asun.encodePretty(user);
 // => "{id, name, active}:(1, Alice, true)"
 
-var prettyTyped = Ason.Ason.encodePrettyTyped(user);
+var prettyTyped = Asun.Asun.encodePrettyTyped(user);
 // => "{id@int, name@str, active@bool}:(1, Alice, true)"
 ```
 
 ## Supported Types
 
-| Type           | ASON Representation       | Example                  |
-| -------------- | ------------------------- | ------------------------ |
-| int            | Plain number              | `42`, `-100`             |
-| float          | Decimal number            | `3.14`, `-0.5`           |
-| bool           | Literal                   | `true`, `false`          |
-| str            | Unquoted or quoted        | `Alice`, `"Carol Smith"` |
-| Optional       | Value or empty            | `hello` or _(blank)_     |
-| List\<T\>      | `[v1,v2,v3]`             | `[rust,go,python]`       |
-| Nested struct  | `(field1,field2)`         | `(Engineering,500000)`   |
+| Type          | ASUN Representation | Example                  |
+| ------------- | ------------------- | ------------------------ |
+| int           | Plain number        | `42`, `-100`             |
+| float         | Decimal number      | `3.14`, `-0.5`           |
+| bool          | Literal             | `true`, `false`          |
+| str           | Unquoted or quoted  | `Alice`, `"Carol Smith"` |
+| Optional      | Value or empty      | `hello` or _(blank)_     |
+| List\<T\>     | `[v1,v2,v3]`        | `[rust,go,python]`       |
+| Nested struct | `(field1,field2)`   | `(Engineering,500000)`   |
 
-Native `Dictionary<K,V>` / map fields are intentionally unsupported in the current ASON format.
+Native `Dictionary<K,V>` / map fields are intentionally unsupported in the current ASUN format.
 If you need keyed collections, model them explicitly as entry-list arrays such as:
 
 ```text
@@ -148,8 +148,8 @@ If you need keyed collections, model them explicitly as entry-list arrays such a
 ### Nested Structs
 
 ```csharp
-record Dept(string Title) : IAsonSchema { /* ... */ }
-record Employee(string Name, Dept Dept) : IAsonSchema { /* ... */ }
+record Dept(string Title) : IAsunSchema { /* ... */ }
+record Employee(string Name, Dept Dept) : IAsunSchema { /* ... */ }
 
 // Schema reflects nesting:
 // {name@str,dept@{title@str}}:(Alice,(Engineering))
@@ -186,40 +186,39 @@ record Employee(string Name, Dept Dept) : IAsonSchema { /* ... */ }
 
 ## API Reference
 
-| Function                       | Description                                              |
-| ------------------------------ | -------------------------------------------------------- |
-| `Ason.encode(T)`               | Serialize struct → schema without scalar hints           |
-| `Ason.encodeTyped(T)`          | Serialize struct → schema with scalar type hints         |
-| `Ason.encode<T>(List<T>)`      | Serialize list → schema without scalar hints (written once) |
-| `Ason.encodeTyped<T>(List<T>)` | Serialize list → schema with scalar type hints           |
-| `Ason.decode(string)`          | Deserialize → field bag (`Dictionary<string, object?>`)  |
-| `Ason.decodeWith<T>(s, fn)`    | Deserialize → typed T via factory                        |
-| `Ason.decodeListWith<T>(s, fn)`| Deserialize → List\<T\> via factory                      |
-| `Ason.encodeBinary(T)`         | Binary encode (zero-copy BinaryPrimitives)               |
-| `Ason.decodeBinaryWith<T>(…)`  | Binary decode → typed T                                  |
-| `Ason.encodePretty(T)`         | Pretty-format encode                                     |
-| `Ason.encodePrettyTyped(T)`    | Pretty-format with scalar type hints                     |
+| Function                        | Description                                                 |
+| ------------------------------- | ----------------------------------------------------------- |
+| `Asun.encode(T)`                | Serialize struct → schema without scalar hints              |
+| `Asun.encodeTyped(T)`           | Serialize struct → schema with scalar type hints            |
+| `Asun.encode<T>(List<T>)`       | Serialize list → schema without scalar hints (written once) |
+| `Asun.encodeTyped<T>(List<T>)`  | Serialize list → schema with scalar type hints              |
+| `Asun.decode(string)`           | Deserialize → field bag (`Dictionary<string, object?>`)     |
+| `Asun.decodeWith<T>(s, fn)`     | Deserialize → typed T via factory                           |
+| `Asun.decodeListWith<T>(s, fn)` | Deserialize → List\<T\> via factory                         |
+| `Asun.encodeBinary(T)`          | Binary encode (zero-copy BinaryPrimitives)                  |
+| `Asun.decodeBinaryWith<T>(…)`   | Binary decode → typed T                                     |
+| `Asun.encodePretty(T)`          | Pretty-format encode                                        |
+| `Asun.encodePrettyTyped(T)`     | Pretty-format with scalar type hints                        |
 
 ## Benchmark Output
 
 Run the bundled benchmark with:
 
 ```bash
-dotnet run --project examples/Bench/Ason.Examples.Bench.csproj -c Release
+dotnet run --project examples/Bench/Asun.Examples.Bench.csproj -c Release
 ```
 
 Headline numbers::
 
 ```text
   Flat struct × 500 (8 fields, vec)
-    Serialize:   JSON 16.22ms/60784B | ASON 10.11ms(1.6x)/28327B(46.6%) | BIN 4.92ms(3.3x)/37230B(61.2%)
-    Deserialize: JSON    22.09ms | ASON     5.70ms(3.9x) | BIN     2.11ms(10.5x)
+    Serialize:   JSON 16.22ms/60784B | ASUN 10.11ms(1.6x)/28327B(46.6%) | BIN 4.92ms(3.3x)/37230B(61.2%)
+    Deserialize: JSON    22.09ms | ASUN     5.70ms(3.9x) | BIN     2.11ms(10.5x)
 ```
-
 
 Actual timings vary by runtime, CPU, and whether you run `Debug` or `Release`.
 
-## Why ASON Performs Well
+## Why ASUN Performs Well
 
 1. **Zero key-hashing** — Schema parsed once; fields mapped by position index `O(1)`, no per-row key string hashing.
 2. **Schema-driven parsing** — Deserializer knows expected types, enabling direct parsing. CPU branch prediction hits ~100%.
@@ -252,7 +251,7 @@ dotnet run --project examples/Basic
 # Complex nested structures, escaping, 5-level deep nesting
 dotnet run --project examples/Complex
 
-# Performance benchmark (ASON vs JSON)
+# Performance benchmark (ASUN vs JSON)
 dotnet run --project examples/Bench -c Release
 ```
 
@@ -263,9 +262,9 @@ dotnet run --project examples/Basic -f net8.0
 dotnet run --project examples/Basic -f net10.0
 ```
 
-## ASON Format Specification
+## ASUN Format Specification
 
-See the full [ASON Spec](https://github.com/ason-lab/ason/blob/main/docs/ASON_SPEC.md) for syntax rules, BNF grammar, escape rules, type system, and LLM integration best practices.
+See the full [ASUN Spec](https://github.com/asun-lab/asun/blob/main/docs/ASUN_SPEC.md) for syntax rules, BNF grammar, escape rules, type system, and LLM integration best practices.
 
 ### Syntax Quick Reference
 

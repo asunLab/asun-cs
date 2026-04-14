@@ -1,7 +1,7 @@
-using Ason;
-using A = Ason.Ason;
+using Asun;
+using A = Asun.Asun;
 
-Console.WriteLine("=== ASON C# Complex Examples ===\n");
+Console.WriteLine("=== ASUN C# Complex Examples ===\n");
 
 // 1. Nested struct
 Console.WriteLine("1. Nested struct:");
@@ -62,7 +62,7 @@ Console.WriteLine($"   serialized ({s.Length} bytes)");
 var bin = A.encodeBinary(company);
 // Build JSON manually (System.Text.Json can't serialize ReadOnlySpan interface props)
 var jsonStr = $"{{\"name\":\"MegaCorp\",\"founded\":2000,\"revenue_m\":500.5,\"public\":true,\"divisions\":[{{\"name\":\"Engineering\",\"location\":\"SF\",\"headcount\":200,\"teams\":[{{\"name\":\"Backend\",\"lead\":\"Alice\",\"size\":12,\"projects\":[{{\"name\":\"API v3\",\"budget\":250,\"active\":true,\"tasks\":[{{\"id\":1,\"title\":\"Design\",\"priority\":1,\"done\":true,\"hours\":40}},{{\"id\":2,\"title\":\"Implement\",\"priority\":1,\"done\":false,\"hours\":120}},{{\"id\":3,\"title\":\"Test\",\"priority\":2,\"done\":false,\"hours\":30}}]}}]}}]}}],\"tags\":[\"tech\",\"public\"]}}";
-Console.WriteLine($"   ASON text: {s.Length} B | ASON bin: {bin.Length} B | JSON: {jsonStr.Length} B");
+Console.WriteLine($"   ASUN text: {s.Length} B | ASUN bin: {bin.Length} B | JSON: {jsonStr.Length} B");
 Console.WriteLine($"   TEXT vs JSON: {(1.0 - (double)s.Length / jsonStr.Length) * 100:F0}% smaller");
 Console.WriteLine($"   BIN vs JSON:  {(1.0 - (double)bin.Length / jsonStr.Length) * 100:F0}% smaller");
 
@@ -76,7 +76,7 @@ Console.WriteLine("\n=== All complex examples passed! ===");
 // ===========================================================================
 // Data types
 // ===========================================================================
-record CDept(string Title) : IAsonSchema
+record CDept(string Title) : IAsunSchema
 {
     static readonly string[] _n = ["title"];
     static readonly string?[] _t = ["str"];
@@ -87,7 +87,7 @@ record CDept(string Title) : IAsonSchema
     public override string ToString() => $"Department{{title={Title}}}";
 }
 
-record CEmployee(long Id, string Name, CDept Dept, bool Active) : IAsonSchema
+record CEmployee(long Id, string Name, CDept Dept, bool Active) : IAsunSchema
 {
     static readonly string[] _n = ["id", "name", "dept", "active"];
     static readonly string?[] _t = ["int", "str", null, "bool"];
@@ -105,7 +105,7 @@ record CEmployee(long Id, string Name, CDept Dept, bool Active) : IAsonSchema
     public override string ToString() => $"Employee{{id={Id}, name={Name}, dept={Dept}, active={Active}}}";
 }
 
-record CAddress(string City, long Zip) : IAsonSchema
+record CAddress(string City, long Zip) : IAsunSchema
 {
     static readonly string[] _n = ["city", "zip"];
     static readonly string?[] _t = ["str", "int"];
@@ -116,7 +116,7 @@ record CAddress(string City, long Zip) : IAsonSchema
         new((string)m["city"]!, Convert.ToInt64(m["zip"]));
 }
 
-record CNested(string Name, CAddress Addr) : IAsonSchema
+record CNested(string Name, CAddress Addr) : IAsunSchema
 {
     static readonly string[] _n = ["name", "addr"];
     static readonly string?[] _t = ["str", null];
@@ -133,7 +133,7 @@ record CNested(string Name, CAddress Addr) : IAsonSchema
     }
 }
 
-record CNote(string Text) : IAsonSchema
+record CNote(string Text) : IAsunSchema
 {
     static readonly string[] _n = ["text"];
     static readonly string?[] _t = ["str"];
@@ -143,7 +143,7 @@ record CNote(string Text) : IAsonSchema
     public static CNote FromFields(Dictionary<string, object?> m) => new((string)m["text"]!);
 }
 
-record CMeasurement(long Id, double Value, string Label) : IAsonSchema
+record CMeasurement(long Id, double Value, string Label) : IAsunSchema
 {
     static readonly string[] _n = ["id", "value", "label"];
     static readonly string?[] _t = ["int", "float", "str"];
@@ -154,7 +154,7 @@ record CMeasurement(long Id, double Value, string Label) : IAsonSchema
         new(Convert.ToInt64(m["id"]), Convert.ToDouble(m["value"]), (string)m["label"]!);
 }
 
-record CNums(long A, double B, long C) : IAsonSchema
+record CNums(long A, double B, long C) : IAsunSchema
 {
     static readonly string[] _n = ["a", "b", "c"];
     static readonly string?[] _t = ["int", "float", "int"];
@@ -165,7 +165,7 @@ record CNums(long A, double B, long C) : IAsonSchema
         new(Convert.ToInt64(m["a"]), Convert.ToDouble(m["b"]), Convert.ToInt64(m["c"]));
 }
 
-record CTask(long Id, string Title, long Priority, bool Done, double Hours) : IAsonSchema
+record CTask(long Id, string Title, long Priority, bool Done, double Hours) : IAsunSchema
 {
     static readonly string[] _n = ["id", "title", "priority", "done", "hours"];
     static readonly string?[] _t = ["int", "str", "int", "bool", "float"];
@@ -174,7 +174,7 @@ record CTask(long Id, string Title, long Priority, bool Done, double Hours) : IA
     public object?[] FieldValues => [Id, Title, Priority, Done, Hours];
 }
 
-record CProject(string Name, double Budget, bool Active, List<CTask> Tasks) : IAsonSchema
+record CProject(string Name, double Budget, bool Active, List<CTask> Tasks) : IAsunSchema
 {
     static readonly string[] _n = ["name", "budget", "active", "tasks"];
     static readonly string?[] _t = ["str", "float", "bool", null];
@@ -183,7 +183,7 @@ record CProject(string Name, double Budget, bool Active, List<CTask> Tasks) : IA
     public object?[] FieldValues => [Name, Budget, Active, Tasks];
 }
 
-record CTeam(string Name, string Lead, long Size, List<CProject> Projects) : IAsonSchema
+record CTeam(string Name, string Lead, long Size, List<CProject> Projects) : IAsunSchema
 {
     static readonly string[] _n = ["name", "lead", "size", "projects"];
     static readonly string?[] _t = ["str", "str", "int", null];
@@ -192,7 +192,7 @@ record CTeam(string Name, string Lead, long Size, List<CProject> Projects) : IAs
     public object?[] FieldValues => [Name, Lead, Size, Projects];
 }
 
-record CDivision(string Name, string Location, long Headcount, List<CTeam> Teams) : IAsonSchema
+record CDivision(string Name, string Location, long Headcount, List<CTeam> Teams) : IAsunSchema
 {
     static readonly string[] _n = ["name", "location", "headcount", "teams"];
     static readonly string?[] _t = ["str", "str", "int", null];
@@ -201,7 +201,7 @@ record CDivision(string Name, string Location, long Headcount, List<CTeam> Teams
     public object?[] FieldValues => [Name, Location, Headcount, Teams];
 }
 
-record CCompany(string Name, long Founded, double RevenueM, bool Public, List<CDivision> Divisions, List<string> Tags) : IAsonSchema
+record CCompany(string Name, long Founded, double RevenueM, bool Public, List<CDivision> Divisions, List<string> Tags) : IAsunSchema
 {
     static readonly string[] _n = ["name", "founded", "revenue_m", "public", "divisions", "tags"];
     static readonly string?[] _t = ["str", "int", "float", "bool", null, null];

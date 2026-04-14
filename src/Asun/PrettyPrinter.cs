@@ -1,14 +1,14 @@
-namespace Ason;
+namespace Asun;
 
-/// <summary>Pretty-format ASON output with smart indentation.</summary>
+/// <summary>Pretty-format ASUN output with smart indentation.</summary>
 public static class PrettyPrinter
 {
     private const int MaxWidth = 100;
 
-    public static string EncodePretty(IAsonSchema value) => PrettyFormat(Encoder.Encode(value));
-    public static string EncodePretty<T>(IReadOnlyList<T> values) where T : IAsonSchema => PrettyFormat(Encoder.Encode(values));
-    public static string EncodePrettyTyped(IAsonSchema value) => PrettyFormat(Encoder.EncodeTyped(value));
-    public static string EncodePrettyTyped<T>(IReadOnlyList<T> values) where T : IAsonSchema => PrettyFormat(Encoder.EncodeTyped(values));
+    public static string EncodePretty(IAsunSchema value) => PrettyFormat(Encoder.Encode(value));
+    public static string EncodePretty<T>(IReadOnlyList<T> values) where T : IAsunSchema => PrettyFormat(Encoder.Encode(values));
+    public static string EncodePrettyTyped(IAsunSchema value) => PrettyFormat(Encoder.EncodeTyped(value));
+    public static string EncodePrettyTyped<T>(IReadOnlyList<T> values) where T : IAsunSchema => PrettyFormat(Encoder.EncodeTyped(values));
 
     public static string PrettyFormat(string src)
     {

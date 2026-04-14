@@ -3,22 +3,22 @@ using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Ason;
+namespace Asun;
 
 /// <summary>
-/// ASON binary codec. Zero-copy decoding from ReadOnlySpan&lt;byte&gt;.
+/// ASUN binary codec. Zero-copy decoding from ReadOnlySpan&lt;byte&gt;.
 /// Wire: bool=1B, int=8B LE, double=8B LE, string=u32LE len+UTF8, list=u32LE count+elements.
 /// </summary>
 public static class BinaryCodec
 {
-    public static byte[] EncodeBinary(IAsonSchema value)
+    public static byte[] EncodeBinary(IAsunSchema value)
     {
         var w = new BinWriter(256);
         value.WriteBinaryValues(ref w);
         return w.ToArray();
     }
 
-    public static byte[] EncodeBinary<T>(IReadOnlyList<T> values) where T : IAsonSchema
+    public static byte[] EncodeBinary<T>(IReadOnlyList<T> values) where T : IAsunSchema
     {
         var w = new BinWriter(values.Count * 64 + 32);
         w.WriteU32((uint)values.Count);
@@ -39,16 +39,16 @@ public static class BinaryCodec
             case double d: w.WriteF64(d); break;
             case string s: w.WriteString(s); break;
             case System.Collections.IDictionary:
-                throw AsonException.UnsupportedMap;
-            case IAsonSchema schema:
+                throw AsunException.UnsupportedMap;
+            case IAsunSchema schema:
                 schema.WriteBinaryValues(ref w);
                 break;
             case System.Collections.IList list:
-                if (list.Count > 0 && list[0] is IAsonSchema)
+                if (list.Count > 0 && list[0] is IAsunSchema)
                 {
                     w.WriteU32((uint)list.Count);
                     for (int i = 0; i < list.Count; i++)
-                        ((IAsonSchema)list[i]!).WriteBinaryValues(ref w);
+                        ((IAsunSchema)list[i]!).WriteBinaryValues(ref w);
                 }
                 else
                 {
@@ -175,7 +175,7 @@ internal ref struct BinReader
     public BinReader(ReadOnlySpan<byte> data) { _data = data; _pos = 0; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Ensure(int n) { if (_pos + n > _data.Length) throw AsonException.Eof; }
+    private void Ensure(int n) { if (_pos + n > _data.Length) throw AsunException.Eof; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte ReadU8() { Ensure(1); return _data[_pos++]; }
@@ -241,7 +241,7 @@ internal ref struct BinReader
                 for (uint i = 0; i < count; i++) list.Add(ReadBool());
                 return list;
             }
-            default: throw new AsonException($"unknown field type: {type}");
+            default: throw new AsunException($"unknown field type: {type}");
         }
     }
 }

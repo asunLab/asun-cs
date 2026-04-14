@@ -2,20 +2,20 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace Ason;
+namespace Asun;
 
 /// <summary>
-/// High-performance ASON text decoder with schema caching.
+/// High-performance ASUN text decoder with schema caching.
 /// </summary>
 public static class Decoder
 {
     // Cache parsed schema field names to avoid re-parsing identical schema headers
     private static readonly ConcurrentDictionary<int, string[]> _schemaCache = new();
 
-    /// <summary>Decode ASON text into a field bag (Dictionary&lt;string, object?&gt;).</summary>
+    /// <summary>Decode ASUN text into a field bag (Dictionary&lt;string, object?&gt;).</summary>
     public static Dictionary<string, object?> Decode(ReadOnlySpan<char> input)
     {
-        var d = new AsonDecoder(input, _schemaCache);
+        var d = new AsunDecoder(input, _schemaCache);
         d.SkipWs();
         var result = d.ParseSingleStruct();
         d.SkipWs();
@@ -25,44 +25,44 @@ public static class Decoder
             {
                 char c = input[i];
                 if (c != ' ' && c != '\t' && c != '\n' && c != '\r')
-                    throw AsonException.TrailingCharacters;
+                    throw AsunException.TrailingCharacters;
             }
         }
         return result;
     }
 
-    /// <summary>Decode ASON text into a typed object using a factory.</summary>
+    /// <summary>Decode ASUN text into a typed object using a factory.</summary>
     public static T DecodeWith<T>(ReadOnlySpan<char> input, Func<Dictionary<string, object?>, T> factory)
     {
         return factory(Decode(input));
     }
 
-    /// <summary>Decode ASON text into a list of field bags.</summary>
+    /// <summary>Decode ASUN text into a list of field bags.</summary>
     public static List<Dictionary<string, object?>> DecodeList(ReadOnlySpan<char> input)
     {
-        var d = new AsonDecoder(input, _schemaCache);
+        var d = new AsunDecoder(input, _schemaCache);
         d.SkipWs();
         return d.ParseVecStruct();
     }
 
-    /// <summary>Decode ASON text into a list of typed objects.</summary>
+    /// <summary>Decode ASUN text into a list of typed objects.</summary>
     public static List<T> DecodeListWith<T>(ReadOnlySpan<char> input, Func<Dictionary<string, object?>, T> factory)
     {
-        var d = new AsonDecoder(input, _schemaCache);
+        var d = new AsunDecoder(input, _schemaCache);
         d.SkipWs();
         return d.ParseVecStructWith(factory);
     }
 }
 
 /// <summary>Internal decoder state — ref struct for zero-alloc stack usage.</summary>
-internal ref struct AsonDecoder
+internal ref struct AsunDecoder
 {
     private readonly ReadOnlySpan<char> _input;
     private readonly ConcurrentDictionary<int, string[]>? _schemaCache;
     internal readonly int Len;
     internal int Pos;
 
-    public AsonDecoder(ReadOnlySpan<char> input, ConcurrentDictionary<int, string[]>? schemaCache = null)
+    public AsunDecoder(ReadOnlySpan<char> input, ConcurrentDictionary<int, string[]>? schemaCache = null)
     {
         _input = input;
         _schemaCache = schemaCache;
@@ -76,7 +76,7 @@ internal ref struct AsonDecoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private char Next()
     {
-        if (Pos >= Len) throw AsonException.Eof;
+        if (Pos >= Len) throw AsunException.Eof;
         return _input[Pos++];
     }
 
@@ -113,7 +113,7 @@ internal ref struct AsonDecoder
     internal string[] ParseSchema()
     {
         int schemaStart = Pos;
-        if (Next() != '{') throw AsonException.ExpectedOpenBrace;
+        if (Next() != '{') throw AsunException.ExpectedOpenBrace;
 
         // Try cache lookup: find end of schema header first
         int braceDepth = 1;
@@ -143,7 +143,7 @@ internal ref struct AsonDecoder
         {
             SkipWs();
             if (Peek() == '}') { Pos++; break; }
-            if (fields.Count > 0) { if (Next() != ',') throw AsonException.ExpectedComma; SkipWs(); }
+            if (fields.Count > 0) { if (Next() != ',') throw AsunException.ExpectedComma; SkipWs(); }
             string name;
             if (Peek() == '"')
             {
@@ -174,7 +174,7 @@ internal ref struct AsonDecoder
 
     private void ValidateSchemaAnnotation()
     {
-        if (Pos >= Len) throw new AsonException("expected schema type after '@'");
+        if (Pos >= Len) throw new AsunException("expected schema type after '@'");
         char tc = _input[Pos];
         if (tc == '{')
         {
@@ -199,7 +199,7 @@ internal ref struct AsonDecoder
                 ValidateSchemaScalarType();
             }
             SkipWs();
-            if (Pos >= Len || _input[Pos] != ']') throw new AsonException("expected ']' in array type annotation");
+            if (Pos >= Len || _input[Pos] != ']') throw new AsunException("expected ']' in array type annotation");
             Pos++;
             return;
         }
@@ -215,11 +215,11 @@ internal ref struct AsonDecoder
             if (c == ',' || c == '}' || c == ']' || c == ' ' || c == '\t') break;
             Pos++;
         }
-        if (start == Pos) throw new AsonException("expected schema type after '@'");
+        if (start == Pos) throw new AsunException("expected schema type after '@'");
         var token = _input[start..Pos].ToString();
         if (token.EndsWith("?")) token = token[..^1];
         if (token is "int" or "str" or "float" or "bool") return;
-        throw new AsonException($"unsupported schema type '{token}'; use int, str, float, or bool");
+        throw new AsunException($"unsupported schema type '{token}'; use int, str, float, or bool");
     }
 
     private void SkipBalanced(char open, char close)
@@ -231,7 +231,7 @@ internal ref struct AsonDecoder
             if (c == open) depth++;
             else if (c == close) { depth--; if (depth == 0) return; }
         }
-        throw AsonException.Eof;
+        throw AsunException.Eof;
     }
 
     // Struct parsing
@@ -240,11 +240,11 @@ internal ref struct AsonDecoder
         SkipWsAndComments();
         if (Pos < Len && _input[Pos] == '[' && Pos + 1 < Len && _input[Pos + 1] == '{')
         {
-            throw new AsonException("expected struct, got vec. Use DecodeList instead.");
+            throw new AsunException("expected struct, got vec. Use DecodeList instead.");
         }
         var fields = ParseSchema();
         SkipWsAndComments();
-        if (Next() != ':') throw AsonException.ExpectedColon;
+        if (Next() != ':') throw AsunException.ExpectedColon;
         SkipWsAndComments();
         return ParseTupleAsMap(fields);
     }
@@ -254,9 +254,9 @@ internal ref struct AsonDecoder
         Pos++; // skip [
         var fields = ParseSchema();
         SkipWs();
-        if (Next() != ']') throw AsonException.ExpectedCloseBracket;
+        if (Next() != ']') throw AsunException.ExpectedCloseBracket;
         SkipWs();
-        if (Next() != ':') throw AsonException.ExpectedColon;
+        if (Next() != ':') throw AsunException.ExpectedColon;
 
         var result = new List<Dictionary<string, object?>>();
         for (;;)
@@ -277,9 +277,9 @@ internal ref struct AsonDecoder
         Pos++; // skip [
         var fields = ParseSchema();
         SkipWs();
-        if (Next() != ']') throw AsonException.ExpectedCloseBracket;
+        if (Next() != ']') throw AsunException.ExpectedCloseBracket;
         SkipWs();
-        if (Next() != ':') throw AsonException.ExpectedColon;
+        if (Next() != ':') throw AsunException.ExpectedColon;
 
         var result = new List<T>();
         // Reuse a single Dictionary across all rows to reduce allocation
@@ -379,7 +379,7 @@ internal ref struct AsonDecoder
         {
             case '(': SkipBalanced('(', ')'); break;
             case '[': SkipBalanced('[', ']'); break;
-            case '<': throw AsonException.UnsupportedMap;
+            case '<': throw AsunException.UnsupportedMap;
             case '"':
                 Pos++;
                 while (Pos < Len)
@@ -389,7 +389,7 @@ internal ref struct AsonDecoder
                     else if (ch == '"') { Pos++; return; }
                     else Pos++;
                 }
-                throw AsonException.UnclosedString;
+                throw AsunException.UnclosedString;
             default:
                 while (Pos < Len && _input[Pos] != ',' && _input[Pos] != ')' && _input[Pos] != ']') Pos++;
                 break;
@@ -404,7 +404,7 @@ internal ref struct AsonDecoder
         char c = _input[Pos];
         if (c == ',' || c == ')' || c == ']') return null;
 
-        // Fast path: number (very common in ASON data)
+        // Fast path: number (very common in ASUN data)
         if ((c >= '0' && c <= '9') || c == '-') return ParseNumber();
 
         // Fast path: quoted string
@@ -422,7 +422,7 @@ internal ref struct AsonDecoder
 
         if (c == '(') return ParseTupleValue();
         if (c == '[') return ParseArray();
-        if (c == '<') throw AsonException.UnsupportedMap;
+        if (c == '<') throw AsunException.UnsupportedMap;
         if (c == '{') return ParseSingleStruct();
         return ParsePlainValue();
     }
@@ -450,7 +450,7 @@ internal ref struct AsonDecoder
             Pos++;
             digits++;
         }
-        if (digits == 0) throw AsonException.InvalidNumber;
+        if (digits == 0) throw AsunException.InvalidNumber;
         if (Pos < Len && _input[Pos] == '.')
         {
             Pos = start;
@@ -511,7 +511,7 @@ internal ref struct AsonDecoder
             if (ch == '\\')
             {
                 Pos++;
-                if (Pos >= Len) throw AsonException.UnclosedString;
+                if (Pos >= Len) throw AsunException.UnclosedString;
                 char esc = _input[Pos++];
                 switch (esc)
                 {
@@ -526,17 +526,17 @@ internal ref struct AsonDecoder
                     case '[': buf.AppendLiteral("["); break;
                     case ']': buf.AppendLiteral("]"); break;
                     case 'u':
-                        if (Pos + 4 > Len) throw AsonException.InvalidUnicodeEscape;
+                        if (Pos + 4 > Len) throw AsunException.InvalidUnicodeEscape;
                         int cp = int.Parse(_input.Slice(Pos, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                         buf.AppendFormatted((char)cp);
                         Pos += 4;
                         break;
-                    default: throw new AsonException($"invalid escape: \\{esc}");
+                    default: throw new AsunException($"invalid escape: \\{esc}");
                 }
             }
             else { buf.AppendFormatted(ch); Pos++; }
         }
-        throw AsonException.UnclosedString;
+        throw AsunException.UnclosedString;
     }
 
     private string ParsePlainValue()
@@ -558,7 +558,7 @@ internal ref struct AsonDecoder
                 if (raw[i] == '\\')
                 {
                     i++;
-                    if (i >= raw.Length) throw AsonException.Eof;
+                    if (i >= raw.Length) throw AsunException.Eof;
                     char e = raw[i++];
                     switch (e)
                     {
@@ -571,7 +571,7 @@ internal ref struct AsonDecoder
                         case '\\': sb.AppendLiteral("\\"); break;
                         case 'n': sb.AppendLiteral("\n"); break;
                         case 't': sb.AppendLiteral("\t"); break;
-                        default: throw new AsonException($"invalid escape: \\{e}");
+                        default: throw new AsunException($"invalid escape: \\{e}");
                     }
                 }
                 else { sb.AppendFormatted(raw[i++]); }

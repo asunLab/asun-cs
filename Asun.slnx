@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/examples/" />
+  <Folder Name="/examples/Basic/">
+    <Project Path="examples/Basic/Asun.Examples.Basic.csproj" />
+  </Folder>
+  <Folder Name="/examples/Bench/">
+    <Project Path="examples/Bench/Asun.Examples.Bench.csproj" />
+  </Folder>
+  <Folder Name="/examples/Complex/">
+    <Project Path="examples/Complex/Asun.Examples.Complex.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Asun/Asun.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Asun.Tests/Asun.Tests.csproj" />
+  </Folder>
+</Solution>
