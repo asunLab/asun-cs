@@ -3,9 +3,9 @@
 [![NuGet](https://img.shields.io/nuget/v/Asun.svg)](https://www.nuget.org/packages/Asun)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-高性能 [ASUN](https://github.com/asun-lab/asun)（Array-Schema Unified Notation）.NET 序列化/反序列化库 — 零拷贝、SIMD 加速、模式驱动的数据格式，专为 LLM 交互和大规模数据传输设计。
+高性能 [ASUN](https://github.com/asunLab/asun)（Array-Schema Unified Notation）.NET 序列化/反序列化库 — 零拷贝、SIMD 加速、模式驱动的数据格式，专为 LLM 交互和大规模数据传输设计。
 
-[English](README.md)
+[English](https://github.com/asunLab/asun-cs/blob/main/README.md)
 
 ## 什么是 ASUN？
 
@@ -177,7 +177,7 @@ record Employee(string Name, Dept Dept) : IAsunSchema { /* ... */ }
 
 ### 多行格式
 
-```text
+```asun
 [{id@int, name@str, active@bool}]:
   (1, Alice, true),
   (2, Bob, false),
@@ -264,7 +264,7 @@ dotnet run --project examples/Basic -f net10.0
 
 ## ASUN 格式规范
 
-请参阅完整的 [ASUN 规范](https://github.com/asun-lab/asun/blob/main/docs/ASUN_SPEC_CN.md)，了解语法规则、BNF 文法、转义规则、类型系统和 LLM 集成最佳实践。
+请参阅完整的 [ASUN 规范](https://github.com/asunLab/asun/blob/main/docs/ASUN_SPEC_CN.md)，了解语法规则、BNF 文法、转义规则、类型系统和 LLM 集成最佳实践。
 
 ### 语法快速参考
 

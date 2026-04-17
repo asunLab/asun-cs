@@ -3,9 +3,9 @@
 [![NuGet](https://img.shields.io/nuget/v/Asun.svg)](https://www.nuget.org/packages/Asun)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A high-performance [ASUN](https://github.com/asun-lab/asun) (Array-Schema Unified Notation) serialization/deserialization library for .NET — zero-copy, SIMD-accelerated, schema-driven data format designed for LLM interactions and large-scale data transmission.
+A high-performance [ASUN](https://github.com/asunLab/asun) (Array-Schema Unified Notation) serialization/deserialization library for .NET — zero-copy, SIMD-accelerated, schema-driven data format designed for LLM interactions and large-scale data transmission.
 
-[中文文档](README_CN.md)
+[中文文档](https://github.com/asunLab/asun-cs/blob/main/README_CN.md)
 
 ## What is ASUN?
 
@@ -177,7 +177,7 @@ record Employee(string Name, Dept Dept) : IAsunSchema { /* ... */ }
 
 ### Multiline Format
 
-```text
+```asun
 [{id@int, name@str, active@bool}]:
   (1, Alice, true),
   (2, Bob, false),
@@ -264,7 +264,7 @@ dotnet run --project examples/Basic -f net10.0
 
 ## ASUN Format Specification
 
-See the full [ASUN Spec](https://github.com/asun-lab/asun/blob/main/docs/ASUN_SPEC.md) for syntax rules, BNF grammar, escape rules, type system, and LLM integration best practices.
+See the full [ASUN Spec](https://github.com/asunLab/asun/blob/main/docs/ASUN_SPEC.md) for syntax rules, BNF grammar, escape rules, type system, and LLM integration best practices.
 
 ### Syntax Quick Reference
 

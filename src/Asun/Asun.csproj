@@ -8,9 +8,9 @@
     <PackageId>Asun</PackageId>
     <Version>1.0.0</Version>
     <Description>High-performance ASUN (Array-Schema Unified Notation) encoder/decoder for .NET. Zero-copy binary, schema-driven text format.</Description>
-    <RepositoryUrl>https://github.com/asun-lab/asun-cs</RepositoryUrl>
+    <RepositoryUrl>https://github.com/asunLab/asun-cs</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/asun-lab/asun-cs</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/asunLab/asun-cs</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>asun;serialization;schema;llm;data-format</PackageTags>
     <Authors>asun contributors</Authors>
