@@ -19,5 +19,5 @@ public sealed class AsunException : Exception
     public static AsunException InvalidNumber => new("invalid number");
     public static AsunException UnclosedString => new("unclosed string");
     public static AsunException InvalidUnicodeEscape => new("invalid unicode escape");
-    public static AsunException UnsupportedMap => new("map syntax is not supported; use entry-list arrays such as attrs@[{key@str,value@int}]");
+    public static AsunException UnsupportedMap => new("map syntax is not supported");
 }

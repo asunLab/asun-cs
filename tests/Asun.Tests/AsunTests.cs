@@ -398,9 +398,9 @@ public class DecodeTests
     }
 
     [Fact]
-    public void LegacyMapSyntaxIsRejected()
+    public void InvalidSchemaTypeIsRejected()
     {
-        Assert.Throws<AsunException>(() => Decoder.Decode("{attrs}:(<age:30>)"));
+        Assert.Throws<AsunException>(() => Decoder.Decode("{attrs@dict}:(value)"));
     }
 
     [Fact]
