@@ -71,7 +71,7 @@ public struct AsunWriter : IDisposable
 
     public void WriteDouble(double v)
     {
-        if (double.IsFinite(v) && v == Math.Truncate(v))
+        if (double.IsFinite(v) && v == Math.Truncate(v) && Math.Abs(v) < 1e16)
         {
             WriteInt((long)v);
             WriteSpan(".0");
@@ -130,44 +130,93 @@ public struct AsunWriter : IDisposable
     internal static bool NeedsQuoting(ReadOnlySpan<char> s)
     {
         if (s.IsEmpty) return true;
-        if (s[0] == ' ' || s[^1] == ' ') return true;
+        char f = s[0], e = s[^1];
+        if (f == ' ' || f == '\t' || f == '\n' || f == '\r') return true;
+        if (e == ' ' || e == '\t' || e == '\n' || e == '\r') return true;
         if (s.SequenceEqual("true") || s.SequenceEqual("false")) return true;
         if (SimdHelper.ContainsAnySpecial(s)) return true;
-
-        int start = 0;
-        if (s[0] == '-') start = 1;
-        if (start < s.Length)
+        // Any other ASCII control char (0x00-0x1F) or DEL (0x7F) forces quoting.
+        for (int k = 0; k < s.Length; k++)
         {
-            bool couldBeNumber = true;
-            for (int i = start; i < s.Length; i++)
-            {
-                char c = s[i];
-                if (!((c >= '0' && c <= '9') || c == '.')) { couldBeNumber = false; break; }
-            }
-            if (couldBeNumber) return true;
+            char c = s[k];
+            if (c < 0x20 || c == 0x7f) return true;
         }
+
+        // Block-comment lookalike forces quoting (e.g. "a/*b", "/*").
+        for (int k = 0; k + 1 < s.Length; k++)
+        {
+            if (s[k] == '/' && s[k + 1] == '*') return true;
+        }
+
+        if (TokenLooksLikeNumber(s)) return true;
         return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TokenLooksLikeNumber(ReadOnlySpan<char> s)
+    {
+        int i = 0;
+        if (i < s.Length && s[i] == '-') i++;
+        int beforeDot = 0;
+        while (i < s.Length && s[i] >= '0' && s[i] <= '9') { i++; beforeDot++; }
+        if (beforeDot == 0) return false;
+
+        bool hasDot = false;
+        bool hasExp = false;
+        if (i < s.Length && s[i] == '.')
+        {
+            hasDot = true;
+            i++;
+            int afterDot = 0;
+            while (i < s.Length && s[i] >= '0' && s[i] <= '9') { i++; afterDot++; }
+            if (afterDot == 0) return false;
+        }
+        if (i < s.Length && (s[i] == 'e' || s[i] == 'E'))
+        {
+            hasExp = true;
+            i++;
+            if (i < s.Length && (s[i] == '+' || s[i] == '-')) i++;
+            int expDigits = 0;
+            while (i < s.Length && s[i] >= '0' && s[i] <= '9') { i++; expDigits++; }
+            if (expDigits == 0) return false;
+        }
+        return i == s.Length && (beforeDot > 0 || hasDot || hasExp);
     }
 
     private void WriteEscaped(ReadOnlySpan<char> s)
     {
-        EnsureCapacity(s.Length * 2 + 2);
+        EnsureCapacity(s.Length * 6 + 2);
+        Span<char> hex = stackalloc char[6];
+        hex[0] = '\\';
+        hex[1] = 'u';
         WriteChar('"');
         for (int i = 0; i < s.Length; i++)
         {
-            switch (s[i])
+            char c = s[i];
+            switch (c)
             {
-                case '"': WriteSpan("\\\""); break;
+                case '"':  WriteSpan("\\\""); break;
                 case '\\': WriteSpan("\\\\"); break;
                 case '\n': WriteSpan("\\n"); break;
                 case '\r': WriteSpan("\\r"); break;
                 case '\t': WriteSpan("\\t"); break;
-                case ',': WriteSpan("\\,"); break;
-                case '(': WriteSpan("\\("); break;
-                case ')': WriteSpan("\\)"); break;
-                case '[': WriteSpan("\\["); break;
-                case ']': WriteSpan("\\]"); break;
-                default: WriteChar(s[i]); break;
+                case '\b': WriteSpan("\\b"); break;
+                case '\f': WriteSpan("\\f"); break;
+                default:
+                    if (c < 0x20 || c == 0x7f)
+                    {
+                        const string h = "0123456789abcdef";
+                        hex[2] = h[(c >> 12) & 0xF];
+                        hex[3] = h[(c >> 8) & 0xF];
+                        hex[4] = h[(c >> 4) & 0xF];
+                        hex[5] = h[c & 0xF];
+                        WriteSpan(hex);
+                    }
+                    else
+                    {
+                        WriteChar(c);
+                    }
+                    break;
             }
         }
         WriteChar('"');
@@ -212,6 +261,8 @@ public struct AsunWriter : IDisposable
                         if (i > 0) WriteChar(',');
                         WriteValue(list[i]);
                     }
+                    if (list.Count > 0 && list[list.Count - 1] is null)
+                        WriteChar(',');
                     WriteChar(']');
                 }
                 break;

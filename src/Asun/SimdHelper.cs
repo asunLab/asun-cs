@@ -9,9 +9,11 @@ namespace Asun;
 /// </summary>
 internal static class SimdHelper
 {
-    // ASUN special chars: , @ ( ) [ ] { } : " \ \n \r \t
+    // ASUN special chars: , @ ( ) [ ] { } < > : " \\ \n \r \t \b \f and 0x7F
+    // Listed explicitly so that any byte in this set forces string quoting,
+    // matching the GRAMMAR rules used by the cross-language conformance suite.
     private static readonly SearchValues<char> s_specialChars =
-        SearchValues.Create(",@()[]{}:\"\\'\n\r\t");
+        SearchValues.Create(",@()[]{}<>:\"\\\n\r\t\b\f\u007f");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ContainsAnySpecial(ReadOnlySpan<char> s)

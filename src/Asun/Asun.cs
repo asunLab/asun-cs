@@ -17,6 +17,10 @@ public static class Asun
     public static List<Dictionary<string, object?>> decodeList(string input) => Decoder.DecodeList(input);
     public static List<T> decodeListWith<T>(string input, Func<Dictionary<string, object?>, T> factory) => Decoder.DecodeListWith(input, factory);
 
+    // --- Untyped Value Codec (for schema-less / dynamic data) ---
+    public static string encodeValue(AsunValue value) => AsunValueCodec.Encode(value);
+    public static AsunValue decodeValue(string input) => AsunValueCodec.Decode(input);
+
     // --- Binary Encoding ---
     public static byte[] encodeBinary(IAsunSchema value) => BinaryCodec.EncodeBinary(value);
     public static byte[] encodeBinary<T>(IReadOnlyList<T> values) where T : IAsunSchema => BinaryCodec.EncodeBinary(values);
